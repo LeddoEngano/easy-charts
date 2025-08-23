@@ -6,16 +6,20 @@ import type { Line, Point } from "@/types/chart";
 interface ChartProps {
   points: Point[];
   lines: Line[];
-  onPointClick?: (point: Point) => void;
+  onPointClick?: (point: Point, event: React.MouseEvent) => void;
   onLineClick?: (line: Line, x: number, y: number) => void;
   onChartClick?: (x: number, y: number) => void;
   onPointDrag?: (pointId: string, x: number, y: number) => void;
-  onPointDragStart?: (pointId: string) => void;
+  onPointDragStart?: (pointId: string, startX: number, startY: number) => void;
   onPointDragEnd?: () => void;
   isAddingPoints?: boolean;
   isAddingCurves?: boolean;
+  isDeletingLines?: boolean;
   draggedPointId?: string | null;
+  hoveredLineId?: string | null;
+  cursorPosition?: { x: number; y: number };
   onOpenCodeDrawer?: () => void;
+  onRestartAnimations?: () => void;
   width?: number;
   height?: number;
 }
@@ -31,8 +35,12 @@ export const Chart = ({
   onPointDragEnd,
   isAddingPoints = false,
   isAddingCurves = false,
+  isDeletingLines = false,
   draggedPointId = null,
+  hoveredLineId = null,
+  cursorPosition = { x: 0, y: 0 },
   onOpenCodeDrawer,
+  onRestartAnimations,
   width = 800,
   height = 600,
 }: ChartProps) => {
@@ -57,7 +65,7 @@ export const Chart = ({
   };
 
   const handleLineClick = (event: React.MouseEvent<SVGElement>, line: Line) => {
-    if (!isAddingCurves) return;
+    if (!isAddingCurves && !isDeletingLines) return;
 
     // Get SVG container coordinates, not the line element coordinates
     const svgElement = event.currentTarget.closest("svg");
@@ -93,13 +101,21 @@ export const Chart = ({
   const handlePointMouseDown = (
     event: React.MouseEvent<SVGElement>,
     pointId: string,
+    startX: number,
+    startY: number,
   ) => {
     event.stopPropagation();
-    onPointDragStart?.(pointId);
+    event.preventDefault(); // Also prevent default behavior
 
-    // Get the SVG container for proper coordinate calculation
+    // Convert screen coordinates to chart coordinates
     const svgElement = event.currentTarget.closest("svg");
     if (!svgElement) return;
+
+    const rect = svgElement.getBoundingClientRect();
+    const chartX = startX - rect.left - padding;
+    const chartY = startY - rect.top - padding;
+
+    onPointDragStart?.(pointId, chartX, chartY);
 
     // Add global mouse event listeners for better drag handling
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -124,21 +140,80 @@ export const Chart = ({
     document.addEventListener("mouseup", handleGlobalMouseUp);
   };
 
-  const handlePointMouseUp = () => {
+  const handlePointMouseUp = (point: Point, event?: React.MouseEvent) => {
+    console.log(
+      "🟡 handlePointMouseUp called for point:",
+      point.id,
+      "with event:",
+      !!event,
+    );
+
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault(); // Also prevent default behavior
+    }
     onPointDragEnd?.();
+
+    // Only trigger click logic if we have an event
+    if (event) {
+      console.log("📤 About to call onPointClick for point:", point.id);
+      console.log("📤 onPointClick function exists:", !!onPointClick);
+      onPointClick?.(point, event);
+      console.log("📤 onPointClick called successfully");
+    } else {
+      console.log("❌ No event provided to handlePointMouseUp");
+    }
   };
 
   const getCursorStyle = () => {
     if (isAddingPoints) return "crosshair";
     if (isAddingCurves) return "crosshair";
+    if (isDeletingLines) return "crosshair";
     return "default";
+  };
+
+  const getPointCursorStyle = (isDragging: boolean) => {
+    if (isDeletingLines) return "pointer"; // Show pointer for delete mode
+    if (isDragging) return "grabbing";
+    return "grab";
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDeletingLines) {
+      // Update cursor position for the trash icon
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      // This will be handled by the parent component
+    }
   };
 
   const getModeText = () => {
     if (isAddingPoints) return "Clique no gráfico para adicionar pontos";
     if (isAddingCurves)
       return "Clique em uma linha para adicionar ponto de controle (pode adicionar vários)";
+    if (isDeletingLines) return "Clique em linhas ou pontos para deletar";
     return "";
+  };
+
+  // Helper functions for point styles
+  const getPointStroke = (point: Point, isControlPoint: boolean) => {
+    if (point.style === "hollow") return point.color;
+    if (point.style === "border") return point.color;
+    return isControlPoint ? "#6d28d9" : point.color;
+  };
+
+  const getPointStrokeWidth = (point: Point, isControlPoint: boolean) => {
+    if (point.style === "border") return "4";
+    if (point.style === "hollow") return "2";
+    return "2";
+  };
+
+  const getPointFilter = (point: Point) => {
+    if (point.style === "glow") {
+      return `drop-shadow(0 0 8px ${point.color}) drop-shadow(0 0 4px ${point.color})`;
+    }
+    return "none";
   };
 
   const generateComplexCurvePath = (
@@ -188,7 +263,38 @@ export const Chart = ({
     <div
       className="relative bg-white border border-gray-200 rounded-lg shadow-lg"
       style={{ width, height }}
+      onMouseMove={handleMouseMove}
     >
+      {/* Restart animations button */}
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="absolute top-0 left-0 z-20 bg-gray-800 text-white p-2 rounded-br-lg hover:bg-gray-700 transition-colors shadow-lg"
+        onClick={onRestartAnimations}
+        title="Reiniciar Animações"
+        style={{
+          transform: "translateY(-1px)",
+        }}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          role="img"
+          aria-label="Reiniciar animações"
+        >
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+          <path d="M3 21v-5h5" />
+        </svg>
+      </motion.button>
+
       {/* Code button tab */}
       <motion.button
         whileHover={{ scale: 1.05 }}
@@ -209,6 +315,8 @@ export const Chart = ({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            role="img"
+            aria-label="Código"
           >
             <polyline points="16 18 22 12 16 6" />
             <polyline points="8 6 2 12 8 18" />
@@ -250,6 +358,13 @@ export const Chart = ({
         role="img"
         aria-label="Chart with points and lines"
         onClick={handleChartClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleChartClick(e as any);
+          }
+        }}
+        tabIndex={0}
         style={{ cursor: getCursorStyle() }}
       >
         {/* Lines between points */}
@@ -258,6 +373,7 @@ export const Chart = ({
             line.controlPointIds.includes(p.id),
           );
           const hasControlPoints = controlPoints.length > 0;
+          const isHovered = hoveredLineId === line.id;
 
           return (
             <g key={line.id}>
@@ -267,14 +383,20 @@ export const Chart = ({
                 y1={line.startPoint.y + padding}
                 x2={line.endPoint.x + padding}
                 y2={line.endPoint.y + padding}
-                stroke="transparent"
-                strokeWidth="20"
+                stroke={isHovered ? "rgba(255, 255, 255, 0.3)" : "transparent"}
+                strokeWidth={isHovered ? "25" : "20"}
                 strokeLinecap="round"
                 onClick={(e) => handleLineClick(e, line)}
-                role="button"
-                tabIndex={isAddingCurves ? 0 : -1}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleLineClick(e as any, line);
+                  }
+                }}
+                tabIndex={isAddingCurves || isDeletingLines ? 0 : -1}
                 style={{
-                  cursor: isAddingCurves ? "crosshair" : "default",
+                  cursor:
+                    isAddingCurves || isDeletingLines ? "crosshair" : "default",
                 }}
               />
 
@@ -284,8 +406,8 @@ export const Chart = ({
                 <motion.path
                   d={generateComplexCurvePath(line, controlPoints, padding)}
                   fill="none"
-                  stroke="#8b5cf6"
-                  strokeWidth="3"
+                  stroke={line.color}
+                  strokeWidth={isHovered ? "5" : "3"}
                   strokeLinecap="round"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
@@ -293,6 +415,11 @@ export const Chart = ({
                     duration: 2,
                     ease: "easeInOut",
                     delay: 0.3,
+                  }}
+                  style={{
+                    filter: isHovered
+                      ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
+                      : "none",
                   }}
                 />
               ) : (
@@ -302,8 +429,8 @@ export const Chart = ({
                   y1={line.startPoint.y + padding}
                   x2={line.endPoint.x + padding}
                   y2={line.endPoint.y + padding}
-                  stroke="#3b82f6"
-                  strokeWidth="3"
+                  stroke={line.color}
+                  strokeWidth={isHovered ? "5" : "3"}
                   strokeLinecap="round"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
@@ -314,6 +441,9 @@ export const Chart = ({
                   }}
                   style={{
                     strokeDasharray: isAddingCurves ? "5,5" : "none",
+                    filter: isHovered
+                      ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
+                      : "none",
                   }}
                 />
               )}
@@ -328,36 +458,86 @@ export const Chart = ({
 
           return (
             <motion.g key={point.id}>
-              {/* Point circle */}
-              <motion.circle
-                cx={point.x + padding}
-                cy={point.y + padding}
-                r={isControlPoint ? "6" : "8"}
-                fill={isControlPoint ? "#8b5cf6" : "#3b82f6"}
-                stroke={isControlPoint ? "#6d28d9" : "#1e40af"}
-                strokeWidth="2"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                  duration: 0.5,
-                  delay: index * 0.1,
-                  type: "spring",
-                  stiffness: 200,
-                }}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-                onMouseDown={(e) => handlePointMouseDown(e, point.id)}
-                onMouseUp={handlePointMouseUp}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPointClick?.(point);
-                }}
-                className="cursor-pointer"
-                style={{
-                  cursor: isDragging ? "grabbing" : "grab",
-                  zIndex: isDragging ? 1000 : 1,
-                }}
-              />
+              {/* Hidden points - invisible but clickable */}
+              {point.style === "hidden" ? (
+                <circle
+                  cx={point.x + padding}
+                  cy={point.y + padding}
+                  r={isControlPoint ? "6" : "8"}
+                  fill="transparent"
+                  stroke="transparent"
+                  strokeWidth="0"
+                  onMouseDown={(e) =>
+                    handlePointMouseDown(e, point.id, e.clientX, e.clientY)
+                  }
+                  onMouseUp={(e) => handlePointMouseUp(point, e)}
+                  className="cursor-pointer"
+                  style={{
+                    cursor: getPointCursorStyle(isDragging),
+                    zIndex: isDragging ? 1000 : 1,
+                  }}
+                />
+              ) : (
+                <>
+                  {/* Visible point circle with different styles */}
+                  <motion.circle
+                    cx={point.x + padding}
+                    cy={point.y + padding}
+                    r={isControlPoint ? "6" : "8"}
+                    fill={
+                      point.style === "hollow" ? "transparent" : point.color
+                    }
+                    stroke={getPointStroke(point, isControlPoint)}
+                    strokeWidth={getPointStrokeWidth(point, isControlPoint)}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{
+                      duration: 0.5,
+                      delay: index * 0.1,
+                      type: "spring",
+                      stiffness: 200,
+                    }}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    onMouseDown={(e) =>
+                      handlePointMouseDown(e, point.id, e.clientX, e.clientY)
+                    }
+                    onMouseUp={(e) => handlePointMouseUp(point, e)}
+                    className="cursor-pointer"
+                    style={{
+                      cursor: getPointCursorStyle(isDragging),
+                      zIndex: isDragging ? 1000 : 1,
+                      filter: getPointFilter(point),
+                    }}
+                  />
+
+                  {/* Additional circles for radar effect - rendered first so they don't interfere with interaction */}
+                  {point.style === "radar" && (
+                    <>
+                      <circle
+                        cx={point.x + padding}
+                        cy={point.y + padding}
+                        r={isControlPoint ? "10" : "12"}
+                        fill="transparent"
+                        stroke={point.color}
+                        strokeWidth="1"
+                        opacity="0.6"
+                        style={{ pointerEvents: "none" }}
+                      />
+                      <circle
+                        cx={point.x + padding}
+                        cy={point.y + padding}
+                        r={isControlPoint ? "14" : "16"}
+                        fill="transparent"
+                        stroke={point.color}
+                        strokeWidth="1"
+                        opacity="0.3"
+                        style={{ pointerEvents: "none" }}
+                      />
+                    </>
+                  )}
+                </>
+              )}
 
               {/* Point label */}
               {point.label && (
@@ -366,7 +546,7 @@ export const Chart = ({
                   y={point.y + padding - (isControlPoint ? 12 : 15)}
                   textAnchor="middle"
                   fontSize={isControlPoint ? "10" : "12"}
-                  fill={isControlPoint ? "#6d28d9" : "#374151"}
+                  fill={isControlPoint ? "#6d28d9" : point.color}
                   fontWeight="500"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}

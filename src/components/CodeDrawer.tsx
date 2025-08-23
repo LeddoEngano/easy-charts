@@ -15,7 +15,7 @@ export const CodeDrawer = ({ isOpen, onClose, chartData }: CodeDrawerProps) => {
     const pointsCode = chartData.points
       .map(
         (point) =>
-          `  { id: "${point.id}", x: ${point.x}, y: ${point.y}${point.label ? `, label: "${point.label}"` : ""} }`,
+          `  { id: "${point.id}", x: ${point.x}, y: ${point.y}${point.label ? `, label: "${point.label}"` : ""}, color: "${point.color}" }`,
       )
       .join(",\n");
 
@@ -25,7 +25,8 @@ export const CodeDrawer = ({ isOpen, onClose, chartData }: CodeDrawerProps) => {
       id: "${line.id}", 
       startPointId: "${line.startPointId}", 
       endPointId: "${line.endPointId}",
-      controlPointIds: [${line.controlPointIds.map((id) => `"${id}"`).join(", ")}]
+      controlPointIds: [${line.controlPointIds.map((id) => `"${id}"`).join(", ")}],
+      color: "${line.color}"
     }`,
       )
       .join(",\n");
@@ -40,6 +41,7 @@ interface Point {
   x: number;
   y: number;
   label?: string;
+  color: string;
 }
 
 interface Line {
@@ -47,6 +49,7 @@ interface Line {
   startPointId: string;
   endPointId: string;
   controlPointIds: string[];
+  color: string;
 }
 
 interface ChartData {
@@ -147,7 +150,7 @@ const Chart = () => {
               <motion.path
                 d={generateCurvePath(startPoint, endPoint, controlPoints, padding)}
                 fill="none"
-                stroke="#8b5cf6"
+                stroke={line.color}
                 strokeWidth="3"
                 strokeLinecap="round"
                 initial={{ pathLength: 0 }}
@@ -160,7 +163,7 @@ const Chart = () => {
                 y1={startPoint.y + padding}
                 x2={endPoint.x + padding}
                 y2={endPoint.y + padding}
-                stroke="#3b82f6"
+                stroke={line.color}
                 strokeWidth="3"
                 strokeLinecap="round"
                 initial={{ pathLength: 0 }}
@@ -182,8 +185,8 @@ const Chart = () => {
               cx={point.x + padding}
               cy={point.y + padding}
               r={isControlPoint ? "6" : "8"}
-              fill={isControlPoint ? "#8b5cf6" : "#3b82f6"}
-              stroke={isControlPoint ? "#6d28d9" : "#1e40af"}
+              fill={point.color}
+              stroke={isControlPoint ? "#6d28d9" : point.color}
               strokeWidth="2"
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -200,7 +203,7 @@ const Chart = () => {
                 y={point.y + padding - (isControlPoint ? 12 : 15)}
                 textAnchor="middle"
                 fontSize={isControlPoint ? "10" : "12"}
-                fill={isControlPoint ? "#6d28d9" : "#374151"}
+                fill={isControlPoint ? "#6d28d9" : point.color}
                 fontWeight="500"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -249,6 +252,7 @@ export default Chart;`;
                 Export TypeScript Code
               </h2>
               <button
+                type="button"
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -261,6 +265,8 @@ export default Chart;`;
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  role="img"
+                  aria-label="Fechar"
                 >
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
