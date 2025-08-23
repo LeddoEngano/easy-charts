@@ -9,6 +9,7 @@ import { Header } from "./Header";
 import { PointStyleMenu } from "./PointStyleMenu";
 import { Sidebar } from "./Sidebar";
 import { CodeDrawer } from "./CodeDrawer";
+import { Toolbar, type AxesMode } from "./Toolbar";
 
 export const ChartContainer = () => {
   const {
@@ -21,6 +22,7 @@ export const ChartContainer = () => {
     hoveredLineId,
     cursorPosition,
     pointStyleMenu,
+    axesMode,
     addPointByClick,
     addControlPointToLine,
     updatePointPosition,
@@ -42,6 +44,7 @@ export const ChartContainer = () => {
     openPointStyleMenu,
     closePointStyleMenu,
     updatePointStyle,
+    setAxesModeHandler,
   } = useChart();
 
   const [isCodeDrawerOpen, setIsCodeDrawerOpen] = useState(false);
@@ -51,94 +54,49 @@ export const ChartContainer = () => {
     event: React.MouseEvent;
   } | null>(null);
 
-  // Log quando pointStyleMenu muda
-  useEffect(() => {
-    console.log("🔄 pointStyleMenu changed:", pointStyleMenu);
-  }, [pointStyleMenu]);
-
   // Effect para detectar quando o arrasto termina e abrir o menu
   useEffect(() => {
     if (!isDragging && lastClickedPoint) {
-      console.log("🎯 Drag ended, checking if should open menu for:", lastClickedPoint.point.id);
-
-      // Verificar se o ponto foi realmente movido
       const canOpen = shouldOpenMenu();
-      console.log("✅ shouldOpenMenu result:", canOpen);
 
       if (canOpen) {
-        console.log("🎉 Opening menu for point:", lastClickedPoint.point.id);
         openPointStyleMenu(
           lastClickedPoint.point.id,
           lastClickedPoint.event.clientX,
           lastClickedPoint.event.clientY,
         );
-      } else {
-        console.log("🚫 Menu blocked - point was dragged");
       }
 
       setLastClickedPoint(null);
     }
   }, [isDragging, lastClickedPoint, shouldOpenMenu, openPointStyleMenu]);
 
-  // Log do estado do menu a cada render
-  console.log("🔍 Current pointStyleMenu state:", pointStyleMenu);
-
   const handlePointClick = (point: Point, event: React.MouseEvent) => {
-    console.log("🔴 === handlePointClick called for point:", point.id, "===");
-    console.log("🔍 Current pointStyleMenu state before click:", pointStyleMenu);
     setIsPointClicked(true);
 
     if (isDeletingLines) {
-      console.log("🗑️ Deleting point:", point.id);
       removePoint(point.id);
       return;
     }
 
-    // TESTE: Forçar abertura do menu para o primeiro ponto
-    if (point.id === chartData.points[0]?.id) {
-      console.log("🧪 TESTE: Forçando abertura do menu para o primeiro ponto");
-      console.log("🎯 Calling openPointStyleMenu with:", {
-        pointId: point.id,
-        x: event.clientX,
-        y: event.clientY,
-      });
-      openPointStyleMenu(point.id, event.clientX, event.clientY);
-      console.log("🔍 pointStyleMenu state after openPointStyleMenu:", pointStyleMenu);
-      setTimeout(() => {
-        console.log("🔍 pointStyleMenu state after timeout:", pointStyleMenu);
-        setIsPointClicked(false);
-      }, 50);
-      return;
-    }
-
-    // Armazenar o ponto clicado para abrir o menu quando o arrasto terminar
-    console.log("📝 Storing clicked point for later menu opening");
     setLastClickedPoint({ point, event });
-
     setTimeout(() => setIsPointClicked(false), 50);
   };
 
   const handleChartClick = (x: number, y: number) => {
-    console.log("handleChartClick called, isPointClicked:", isPointClicked);
-
-    // Don't add point if a point was just clicked
     if (isPointClicked) {
-      console.log("Ignoring chart click - point was clicked");
       return;
     }
 
     if (isAddingPoints) {
-      console.log("Adding point at:", x, y);
       addPointByClick(x, y);
     }
   };
 
   const handleLineClick = (line: Line, x: number, y: number) => {
-    console.log("Line clicked:", line.id, "isDeletingLines:", isDeletingLines);
     if (isAddingCurves) {
       addControlPointToLine(line.id, x, y);
     } else if (isDeletingLines) {
-      console.log("Removing line:", line.id);
       removeLine(line.id);
     }
   };
@@ -152,13 +110,11 @@ export const ChartContainer = () => {
     startX: number,
     startY: number,
   ) => {
-    console.log("handlePointDragStart called for point:", pointId);
-    setIsPointClicked(true); // Mark that a point interaction started
+    setIsPointClicked(true);
     startDragging(pointId, startX, startY);
   };
 
   const handlePointDragEnd = () => {
-    console.log("handlePointDragEnd called");
     stopDragging();
   };
 
@@ -180,7 +136,7 @@ export const ChartContainer = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex h-[calc(100vh-64px)]">
         <Sidebar
           onToggleAddingPoints={toggleAddingPoints}
           onToggleAddingCurves={toggleAddingCurves}
@@ -198,49 +154,41 @@ export const ChartContainer = () => {
           }))}
         />
 
-        <div
-          className="flex-1 flex items-center justify-center p-8 relative"
-          onMouseMove={handleMouseMove}
-        >
-          {/* Botão de teste para forçar abertura do menu */}
-          <button
-            onClick={() => {
-              console.log("🧪 TESTE: Forçando abertura do menu via botão");
-              if (chartData.points.length > 0) {
-                const firstPoint = chartData.points[0];
-                openPointStyleMenu(firstPoint.id, 400, 300);
-              }
-            }}
-            className="absolute top-4 left-4 z-50 bg-red-500 text-white px-3 py-1 rounded text-sm"
+        <div className="flex-1 flex flex-col">
+          <Toolbar axesMode={axesMode} onAxesModeChange={setAxesModeHandler} />
+
+          <div
+            className="flex-1 flex items-center justify-center p-8 relative"
+            onMouseMove={handleMouseMove}
           >
-            TESTE MENU
-          </button>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <Chart
-              points={chartData.points}
-              lines={chartData.lines}
-              onPointClick={handlePointClick}
-              onLineClick={handleLineClick}
-              onChartClick={handleChartClick}
-              onPointDrag={handlePointDrag}
-              onPointDragStart={handlePointDragStart}
-              onPointDragEnd={handlePointDragEnd}
-              isAddingPoints={isAddingPoints}
-              isAddingCurves={isAddingCurves}
-              isDeletingLines={isDeletingLines}
-              draggedPointId={draggedPointId}
-              hoveredLineId={hoveredLineId}
-              cursorPosition={cursorPosition}
-              onOpenCodeDrawer={handleOpenCodeDrawer}
-              onRestartAnimations={restartAnimations}
-              width={800}
-              height={600}
-            />
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Chart
+                points={chartData.points}
+                lines={chartData.lines}
+                onPointClick={handlePointClick}
+                onLineClick={handleLineClick}
+                onChartClick={handleChartClick}
+                onPointDrag={handlePointDrag}
+                onPointDragStart={handlePointDragStart}
+                onPointDragEnd={handlePointDragEnd}
+                isAddingPoints={isAddingPoints}
+                isAddingCurves={isAddingCurves}
+                isDeletingLines={isDeletingLines}
+                draggedPointId={draggedPointId}
+                hoveredLineId={hoveredLineId}
+                cursorPosition={cursorPosition}
+                onOpenCodeDrawer={handleOpenCodeDrawer}
+                onRestartAnimations={restartAnimations}
+                axesMode={axesMode}
+                width={800}
+                height={600}
+              />
+            </motion.div>
+          </div>
 
           {/* Trash icon that follows cursor when in delete mode */}
           {isDeletingLines && (

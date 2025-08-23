@@ -265,31 +265,19 @@ export const Sidebar = ({
         </motion.div>
       )}
 
-      {/* New Line Button - only show when adding points */}
-      {isAddingPoints && (
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={onStartNewLine}
-          className="w-10 h-10 rounded-lg my-3 flex items-center justify-center bg-gray-800 text-gray-300 hover:bg-green-600 hover:text-white transition-all duration-200"
-          title="Iniciar Nova Linha"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            role="img"
-            aria-label="Nova linha"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </motion.button>
+      {/* Color Picker Backdrop */}
+      {showColorPicker && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={handleBackdropClick}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              handleBackdropClick();
+            }
+          }}
+          role="button"
+          tabIndex={-1}
+        />
       )}
     </motion.div>
   );

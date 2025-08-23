@@ -1,5 +1,24 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import type { ChartData, Line, Point, PointStyle } from "@/types/chart";
+import type { AxesMode } from "@/components/Toolbar";
+
+const STORAGE_KEY = "easy-charts-data";
+
+// Predefined colors for automatic color cycling
+const LINE_COLORS = [
+  "#3b82f6", // Blue
+  "#ef4444", // Red
+  "#10b981", // Green
+  "#f59e0b", // Yellow
+  "#8b5cf6", // Purple
+  "#ec4899", // Pink
+  "#06b6d4", // Cyan
+  "#f97316", // Orange
+  "#84cc16", // Lime
+  "#06b6d4", // Teal
+  "#a855f7", // Violet
+  "#f43f5e", // Rose
+];
 
 export const useChart = () => {
   const [chartData, setChartData] = useState<ChartData>({
@@ -27,20 +46,59 @@ export const useChart = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [actuallyDragged, setActuallyDragged] = useState(false);
   const [dragMoveCount, setDragMoveCount] = useState(0);
+  const [axesMode, setAxesMode] = useState<AxesMode>("off");
+
+  // Load data from localStorage only on client side
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsedData = JSON.parse(saved);
+        setChartData(parsedData);
+      } catch (error) {
+        console.warn("Failed to parse saved chart data:", error);
+      }
+    }
+  }, []);
+
+  // Save chart data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(chartData));
+  }, [chartData]);
+
+  // Get next color for new lines based on current line count
+  const getNextColor = useCallback((currentLineCount: number) => {
+    const colorIndex = currentLineCount % LINE_COLORS.length;
+    return LINE_COLORS[colorIndex];
+  }, []);
 
   // Add a new point to the chart
   const addPoint = useCallback(
     (x: number, y: number, label?: string) => {
-      const newPoint: Point = {
-        id: `point-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        x,
-        y,
-        label,
-        color: currentColor, // Use current color for new points
-        style: "default", // Default style for new points
-      };
-
       setChartData((prev) => {
+        // Determine the color for the new point
+        let pointColor: string;
+
+        // Simplified logic: if we have an odd number of points, it's starting a new line
+        const isStartingNewLine = prev.points.length % 2 === 0;
+
+        if (isStartingNewLine) {
+          // This point will start a new line, so use the next color
+          pointColor = getNextColor(Math.floor(prev.points.length / 2));
+        } else {
+          // This is the second point of a line, use the same color as the previous point
+          pointColor = prev.points[prev.points.length - 1].color;
+        }
+
+        const newPoint: Point = {
+          id: `point-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          x,
+          y,
+          label,
+          color: pointColor,
+          style: "default", // Default style for new points
+        };
+
         const newPoints = [...prev.points, newPoint];
         const newLines = [...prev.lines];
 
@@ -60,6 +118,9 @@ export const useChart = () => {
             !prev.lines.some((line) => line.endPointId === secondLastPoint.id);
 
           if (shouldCreateLine) {
+            // Use the same color that was determined for the points
+            const lineColor = pointColor;
+
             const newLine: Line = {
               id: `line-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               startPointId: secondLastPoint.id,
@@ -67,7 +128,17 @@ export const useChart = () => {
               startPoint: secondLastPoint,
               endPoint: lastPoint,
               controlPointIds: [],
-              color: currentColor,
+              color: lineColor,
+            };
+
+            // Update the color of both points to match the line
+            newPoints[newPoints.length - 1] = {
+              ...lastPoint,
+              color: lineColor,
+            };
+            newPoints[newPoints.length - 2] = {
+              ...secondLastPoint,
+              color: lineColor,
             };
 
             newLines.push(newLine);
@@ -80,7 +151,7 @@ export const useChart = () => {
         };
       });
     },
-    [isNewLineMode, currentColor],
+    [isNewLineMode, currentColor, getNextColor],
   );
 
   // Add point by click coordinates (for chart click)
@@ -130,46 +201,24 @@ export const useChart = () => {
   // Update point position (for dragging)
   const updatePointPosition = useCallback(
     (pointId: string, x: number, y: number) => {
-      console.log(
-        "📍 updatePointPosition called for point:",
-        pointId,
-        "at position:",
-        { x, y },
-      );
-
-      // Increment move count - this indicates actual dragging
       setDragMoveCount((prev) => {
         const newCount = prev + 1;
-        console.log("🔢 Drag move count:", newCount);
 
-        // If we have multiple moves, it's definitely a drag
         if (newCount > 2) {
           setActuallyDragged(true);
-          console.log("🔴 Multiple moves detected - marking as dragged");
         }
 
         return newCount;
       });
 
-      // Also check distance for single moves
       if (dragStartPosition) {
         const distance = Math.sqrt(
           Math.pow(x - dragStartPosition.x, 2) +
             Math.pow(y - dragStartPosition.y, 2),
         );
 
-        console.log(
-          "📏 Movement distance:",
-          distance,
-          "pixels from",
-          dragStartPosition,
-          "to",
-          { x, y },
-        );
-
         if (distance > 8) {
           setActuallyDragged(true);
-          console.log("🔴 Large distance movement - marking as dragged");
         }
       }
 
@@ -183,7 +232,6 @@ export const useChart = () => {
         return {
           points: updatedPoints,
           lines: prev.lines.map((line) => {
-            // Update line references if the moved point is a start or end point
             if (line.startPointId === pointId && updatedPoint) {
               return { ...line, startPoint: updatedPoint };
             }
@@ -201,46 +249,21 @@ export const useChart = () => {
   // Start dragging a point
   const startDragging = useCallback(
     (pointId: string, startX: number, startY: number) => {
-      console.log("=== startDragging called ===");
-      console.log("Point ID:", pointId, "Start position:", {
-        x: startX,
-        y: startY,
-      });
-
       setDraggedPointId(pointId);
       setDragStartPosition({ x: startX, y: startY });
       setIsDragging(true);
-      setActuallyDragged(false); // Reset - will be set to true if actually moved
-      setDragMoveCount(0); // Reset move counter
-
-      console.log("States after startDragging:", {
-        isDragging: true,
-        actuallyDragged: false,
-        dragMoveCount: 0,
-        dragStartPosition: { x: startX, y: startY },
-      });
+      setActuallyDragged(false);
+      setDragMoveCount(0);
     },
     [],
   );
 
   // Stop dragging
   const stopDragging = useCallback(() => {
-    console.log("=== stopDragging called ===");
-    console.log("Current states before reset:", {
-      isDragging,
-      actuallyDragged,
-    });
-
     setDraggedPointId(null);
     setDragStartPosition(null);
     setIsDragging(false);
-    // Note: actuallyDragged stays true if it was set during the drag
-
-    console.log("States after reset:", {
-      isDragging: false,
-      actuallyDragged,
-    });
-  }, [isDragging, actuallyDragged]);
+  }, []);
 
   // Toggle adding points mode
   const toggleAddingPoints = useCallback(() => {
@@ -305,6 +328,26 @@ export const useChart = () => {
       points: [],
       lines: [],
     });
+    // Clear from localStorage
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
+  // Save current chart data manually
+  const saveChartData = useCallback(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(chartData));
+  }, [chartData]);
+
+  // Load chart data from localStorage
+  const loadChartData = useCallback(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsedData = JSON.parse(saved);
+        setChartData(parsedData);
+      } catch (error) {
+        console.warn("Failed to parse saved chart data:", error);
+      }
+    }
   }, []);
 
   // Restart animations
@@ -377,9 +420,7 @@ export const useChart = () => {
   // Open point style menu
   const openPointStyleMenu = useCallback(
     (pointId: string, x: number, y: number) => {
-      console.log("🎯 openPointStyleMenu called with:", { pointId, x, y });
       setPointStyleMenu({ pointId, x, y });
-      console.log("📋 Point style menu state updated");
     },
     [],
   );
@@ -409,30 +450,13 @@ export const useChart = () => {
 
   // Check if should open menu (simple logic)
   const shouldOpenMenu = useCallback(() => {
-    console.log("shouldOpenMenu check:", {
-      isDragging,
-      actuallyDragged,
-      dragMoveCount,
-    });
+    return !isDragging && !actuallyDragged;
+  }, [isDragging, actuallyDragged]);
 
-    // Simple rule: only open if NOT currently dragging and was NOT actually dragged
-    const canOpen = !isDragging && !actuallyDragged;
-
-    if (canOpen) {
-      console.log("ALLOWED: opening menu");
-    } else {
-      console.log(
-        "BLOCKED: isDragging =",
-        isDragging,
-        "actuallyDragged =",
-        actuallyDragged,
-        "dragMoveCount =",
-        dragMoveCount,
-      );
-    }
-
-    return canOpen;
-  }, [isDragging, actuallyDragged, dragMoveCount]);
+  // Set axes mode
+  const setAxesModeHandler = useCallback((mode: AxesMode) => {
+    setAxesMode(mode);
+  }, []);
 
   return {
     chartData,
@@ -445,6 +469,7 @@ export const useChart = () => {
     hoveredLineId,
     cursorPosition,
     pointStyleMenu,
+    axesMode,
     addPoint,
     addPointByClick,
     addControlPointToLine,
@@ -467,5 +492,8 @@ export const useChart = () => {
     openPointStyleMenu,
     closePointStyleMenu,
     updatePointStyle,
+    saveChartData,
+    loadChartData,
+    setAxesModeHandler,
   };
 };

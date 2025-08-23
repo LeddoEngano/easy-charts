@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { Line, Point } from "@/types/chart";
+import type { AxesMode } from "./Toolbar";
 
 interface ChartProps {
   points: Point[];
@@ -20,6 +21,7 @@ interface ChartProps {
   cursorPosition?: { x: number; y: number };
   onOpenCodeDrawer?: () => void;
   onRestartAnimations?: () => void;
+  axesMode?: AxesMode;
   width?: number;
   height?: number;
 }
@@ -41,6 +43,7 @@ export const Chart = ({
   cursorPosition = { x: 0, y: 0 },
   onOpenCodeDrawer,
   onRestartAnimations,
+  axesMode = "off",
   width = 800,
   height = 600,
 }: ChartProps) => {
@@ -141,27 +144,14 @@ export const Chart = ({
   };
 
   const handlePointMouseUp = (point: Point, event?: React.MouseEvent) => {
-    console.log(
-      "🟡 handlePointMouseUp called for point:",
-      point.id,
-      "with event:",
-      !!event,
-    );
-
     if (event) {
       event.stopPropagation();
-      event.preventDefault(); // Also prevent default behavior
+      event.preventDefault();
     }
     onPointDragEnd?.();
 
-    // Only trigger click logic if we have an event
     if (event) {
-      console.log("📤 About to call onPointClick for point:", point.id);
-      console.log("📤 onPointClick function exists:", !!onPointClick);
       onPointClick?.(point, event);
-      console.log("📤 onPointClick called successfully");
-    } else {
-      console.log("❌ No event provided to handlePointMouseUp");
     }
   };
 
@@ -214,6 +204,13 @@ export const Chart = ({
       return `drop-shadow(0 0 8px ${point.color}) drop-shadow(0 0 4px ${point.color})`;
     }
     return "none";
+  };
+
+  const calculateLineLength = (startPoint: Point, endPoint: Point) => {
+    return Math.sqrt(
+      Math.pow(endPoint.x - startPoint.x, 2) +
+        Math.pow(endPoint.y - startPoint.y, 2),
+    );
   };
 
   const generateComplexCurvePath = (
@@ -350,6 +347,161 @@ export const Chart = ({
         <rect width="100%" height="100%" fill="url(#grid)" />
       </svg>
 
+      {/* Axes */}
+      {axesMode !== "off" && (
+        <svg
+          width={width}
+          height={height}
+          className="absolute inset-0 pointer-events-none"
+          role="img"
+          aria-label="Chart axes"
+        >
+          {axesMode === "quadrants" ? (
+            // 4 Quadrants Mode - Center axes
+            <>
+              {/* X Axis */}
+              <motion.line
+                x1={padding}
+                y1={height / 2}
+                x2={width - padding}
+                y2={height / 2}
+                stroke="#374151"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1, ease: "easeInOut" }}
+              />
+
+              {/* Y Axis */}
+              <motion.line
+                x1={width / 2}
+                y1={padding}
+                x2={width / 2}
+                y2={height - padding}
+                stroke="#374151"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1, ease: "easeInOut", delay: 0.3 }}
+              />
+
+              {/* X Axis Arrows */}
+              <motion.polygon
+                points={`${width - padding - 10},${height / 2 - 5} ${width - padding},${height / 2} ${width - padding - 10},${height / 2 + 5}`}
+                fill="#374151"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5, delay: 1 }}
+              />
+              <motion.polygon
+                points={`${padding + 10},${height / 2 - 5} ${padding},${height / 2} ${padding + 10},${height / 2 + 5}`}
+                fill="#374151"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5, delay: 1 }}
+              />
+
+              {/* Y Axis Arrows */}
+              <motion.polygon
+                points={`${width / 2 - 5},${padding + 10} ${width / 2},${padding} ${width / 2 + 5},${padding + 10}`}
+                fill="#374151"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5, delay: 1.3 }}
+              />
+              <motion.polygon
+                points={`${width / 2 - 5},${height - padding - 10} ${width / 2},${height - padding} ${width / 2 + 5},${height - padding - 10}`}
+                fill="#374151"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5, delay: 1.3 }}
+              />
+            </>
+          ) : (
+            // Single Quadrant Mode - Bottom-left origin
+            <>
+              {/* X Axis */}
+              <motion.line
+                x1={padding}
+                y1={height - padding}
+                x2={width - padding}
+                y2={height - padding}
+                stroke="#374151"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1, ease: "easeInOut" }}
+              />
+
+              {/* Y Axis */}
+              <motion.line
+                x1={padding}
+                y1={height - padding}
+                x2={padding}
+                y2={padding}
+                stroke="#374151"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1, ease: "easeInOut", delay: 0.3 }}
+              />
+
+              {/* X Axis Arrow */}
+              <motion.polygon
+                points={`${width - padding - 10},${height - padding - 5} ${width - padding},${height - padding} ${width - padding - 10},${height - padding + 5}`}
+                fill="#374151"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5, delay: 1 }}
+              />
+
+              {/* Y Axis Arrow */}
+              <motion.polygon
+                points={`${padding - 5},${padding + 10} ${padding},${padding} ${padding + 5},${padding + 10}`}
+                fill="#374151"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5, delay: 1.3 }}
+              />
+
+              {/* X Axis Label */}
+              <motion.text
+                x={width - padding - 20}
+                y={height - padding + 25}
+                textAnchor="middle"
+                fontSize="14"
+                fill="#374151"
+                fontWeight="500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 1.5 }}
+              >
+                X
+              </motion.text>
+
+              {/* Y Axis Label */}
+              <motion.text
+                x={padding - 25}
+                y={padding + 20}
+                textAnchor="middle"
+                fontSize="14"
+                fill="#374151"
+                fontWeight="500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 1.5 }}
+              >
+                Y
+              </motion.text>
+            </>
+          )}
+        </svg>
+      )}
+
       {/* Chart area */}
       <svg
         width={width}
@@ -376,7 +528,9 @@ export const Chart = ({
           const isHovered = hoveredLineId === line.id;
 
           return (
-            <g key={line.id}>
+            <g
+              key={`${line.id}-${line.startPoint.x}-${line.startPoint.y}-${line.endPoint.x}-${line.endPoint.y}`}
+            >
               {/* Invisible clickable area for line */}
               <line
                 x1={line.startPoint.x + padding}
@@ -404,6 +558,7 @@ export const Chart = ({
               {hasControlPoints ? (
                 /* Complex curved path with multiple control points */
                 <motion.path
+                  key={`curved-${line.id}-${controlPoints.length}`}
                   d={generateComplexCurvePath(line, controlPoints, padding)}
                   fill="none"
                   stroke={line.color}
@@ -423,29 +578,41 @@ export const Chart = ({
                   }}
                 />
               ) : (
-                /* Straight line when no control points */
-                <motion.line
-                  x1={line.startPoint.x + padding}
-                  y1={line.startPoint.y + padding}
-                  x2={line.endPoint.x + padding}
-                  y2={line.endPoint.y + padding}
-                  stroke={line.color}
-                  strokeWidth={isHovered ? "5" : "3"}
-                  strokeLinecap="round"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{
-                    duration: 1.5,
-                    ease: "easeInOut",
-                    delay: 0.2,
-                  }}
-                  style={{
-                    strokeDasharray: isAddingCurves ? "5,5" : "none",
-                    filter: isHovered
-                      ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
-                      : "none",
-                  }}
-                />
+                /* Straight line with drawing animation from A to B */
+                (() => {
+                  const lineLength = calculateLineLength(
+                    line.startPoint,
+                    line.endPoint,
+                  );
+                  return (
+                    <motion.path
+                      key={`straight-${line.id}-${line.startPoint.x}-${line.startPoint.y}-${line.endPoint.x}-${line.endPoint.y}`}
+                      d={`M ${line.startPoint.x + padding} ${line.startPoint.y + padding} L ${line.endPoint.x + padding} ${line.endPoint.y + padding}`}
+                      fill="none"
+                      stroke={line.color}
+                      strokeWidth={isHovered ? "5" : "3"}
+                      strokeLinecap="round"
+                      initial={{
+                        strokeDasharray: `${lineLength} ${lineLength}`,
+                        strokeDashoffset: lineLength,
+                      }}
+                      animate={{
+                        strokeDashoffset: 0,
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        ease: "easeInOut",
+                        delay: 0.2,
+                      }}
+                      style={{
+                        strokeDasharray: isAddingCurves ? "5,5" : undefined,
+                        filter: isHovered
+                          ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
+                          : "none",
+                      }}
+                    />
+                  );
+                })()
               )}
             </g>
           );
