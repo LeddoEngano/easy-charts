@@ -3,14 +3,172 @@
 import { motion, AnimatePresence } from "framer-motion";
 import type { ChartData } from "@/types/chart";
 import { CodeBlock } from "@/components/ui/code-block";
+import type { AxesMode } from "./Toolbar";
 
 interface CodeDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   chartData: ChartData;
+  showGrid: boolean;
+  axesMode: AxesMode;
 }
 
-export const CodeDrawer = ({ isOpen, onClose, chartData }: CodeDrawerProps) => {
+export const CodeDrawer = ({
+  isOpen,
+  onClose,
+  chartData,
+  showGrid,
+  axesMode,
+}: CodeDrawerProps) => {
+  const generateAxesCode = (mode: AxesMode) => {
+    if (mode === "quadrants") {
+      return `
+      {/* Axes - 4 Quadrants Mode */}
+      <g>
+        {/* X Axis */}
+        <motion.line
+          x1={40}
+          y1={300}
+          x2={760}
+          y2={300}
+          stroke="#374151"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1, ease: "easeInOut" }}
+        />
+        
+        {/* Y Axis */}
+        <motion.line
+          x1={400}
+          y1={40}
+          x2={400}
+          y2={560}
+          stroke="#374151"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1, ease: "easeInOut", delay: 0.3 }}
+        />
+
+        {/* X Axis Arrows */}
+        <motion.polygon
+          points="750,295 760,300 750,305"
+          fill="#374151"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, delay: 1 }}
+        />
+        <motion.polygon
+          points="50,295 40,300 50,305"
+          fill="#374151"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, delay: 1 }}
+        />
+
+        {/* Y Axis Arrows */}
+        <motion.polygon
+          points="395,50 400,40 405,50"
+          fill="#374151"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, delay: 1.3 }}
+        />
+        <motion.polygon
+          points="395,550 400,560 405,550"
+          fill="#374151"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, delay: 1.3 }}
+        />
+      </g>`;
+    } else if (mode === "single") {
+      return `
+      {/* Axes - Single Quadrant Mode */}
+      <g>
+        {/* X Axis */}
+        <motion.line
+          x1={40}
+          y1={560}
+          x2={760}
+          y2={560}
+          stroke="#374151"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1, ease: "easeInOut" }}
+        />
+        
+        {/* Y Axis */}
+        <motion.line
+          x1={40}
+          y1={560}
+          x2={40}
+          y2={40}
+          stroke="#374151"
+          strokeWidth="2"
+          strokeDasharray="5,5"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1, ease: "easeInOut", delay: 0.3 }}
+        />
+
+        {/* X Axis Arrow */}
+        <motion.polygon
+          points="750,555 760,560 750,565"
+          fill="#374151"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, delay: 1 }}
+        />
+
+        {/* Y Axis Arrow */}
+        <motion.polygon
+          points="35,50 40,40 45,50"
+          fill="#374151"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, delay: 1.3 }}
+        />
+
+        {/* X Axis Label */}
+        <motion.text
+          x={740}
+          y={585}
+          textAnchor="middle"
+          fontSize="14"
+          fill="#374151"
+          fontWeight="500"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 1.5 }}
+        >
+          X
+        </motion.text>
+
+        {/* Y Axis Label */}
+        <motion.text
+          x={15}
+          y={60}
+          textAnchor="middle"
+          fontSize="14"
+          fill="#374151"
+          fontWeight="500"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 1.5 }}
+        >
+          Y
+        </motion.text>
+      </g>`;
+    }
+    return "";
+  };
+
   const generateTypeScriptCode = () => {
     const pointsCode = chartData.points
       .map(
@@ -112,11 +270,12 @@ const Chart = () => {
     <svg 
       width="800" 
       height="600" 
-      className="bg-white border border-gray-200 rounded-lg shadow-lg"
+      className="bg-white"
       role="img"
       aria-label="Chart with points and lines"
     >
-      {/* Grid background */}
+      ${showGrid
+        ? `{/* Grid background */}
       <defs>
         <pattern 
           id="grid" 
@@ -132,7 +291,9 @@ const Chart = () => {
           />
         </pattern>
       </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" />
+      <rect width="100%" height="100%" fill="url(#grid)" />`
+        : ""
+      }
       
       {/* Lines */}
       {chartData.lines.map((line) => {
@@ -179,6 +340,11 @@ const Chart = () => {
       {chartData.points.map((point, index) => {
         const isControlPoint = point.id.startsWith("control-");
         
+        // Skip control points in exported code
+        if (isControlPoint) {
+          return null;
+        }
+        
         return (
           <motion.g key={point.id}>
             <motion.circle
@@ -218,6 +384,8 @@ const Chart = () => {
           </motion.g>
         );
       })}
+
+      ${axesMode !== "off" ? generateAxesCode(axesMode) : ""}
     </svg>
   );
 };

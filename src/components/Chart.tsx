@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import type { Line, Point } from "@/types/chart";
 import type { AxesMode } from "./Toolbar";
 
@@ -19,9 +20,11 @@ interface ChartProps {
   draggedPointId?: string | null;
   hoveredLineId?: string | null;
   cursorPosition?: { x: number; y: number };
-  onOpenCodeDrawer?: () => void;
+
   onRestartAnimations?: () => void;
+  onDownloadChart?: (format: "svg" | "png" | "gif") => void;
   axesMode?: AxesMode;
+  showGrid?: boolean;
   width?: number;
   height?: number;
 }
@@ -41,13 +44,33 @@ export const Chart = ({
   draggedPointId = null,
   hoveredLineId = null,
   cursorPosition = { x: 0, y: 0 },
-  onOpenCodeDrawer,
   onRestartAnimations,
+  onDownloadChart,
   axesMode = "off",
+  showGrid = true,
   width = 800,
   height = 600,
 }: ChartProps) => {
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const padding = 40;
+
+  // Close download menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest(".download-menu-container")) {
+        setShowDownloadMenu(false);
+      }
+    };
+
+    if (showDownloadMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDownloadMenu]);
 
   const handleChartClick = (event: React.MouseEvent<SVGSVGElement>) => {
     if (!isAddingPoints) return;
@@ -209,7 +232,7 @@ export const Chart = ({
   const calculateLineLength = (startPoint: Point, endPoint: Point) => {
     return Math.sqrt(
       Math.pow(endPoint.x - startPoint.x, 2) +
-        Math.pow(endPoint.y - startPoint.y, 2),
+      Math.pow(endPoint.y - startPoint.y, 2),
     );
   };
 
@@ -258,7 +281,7 @@ export const Chart = ({
 
   return (
     <div
-      className="relative bg-white border border-gray-200 rounded-lg shadow-lg"
+      className="relative bg-white border border-gray-200 rounded-lg shadow-lg outline-none focus:outline-none chart-container"
       style={{ width, height }}
       onMouseMove={handleMouseMove}
     >
@@ -266,7 +289,7 @@ export const Chart = ({
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="absolute top-0 left-0 z-20 bg-gray-800 text-white p-2 rounded-br-lg hover:bg-gray-700 transition-colors shadow-lg"
+        className="absolute top-0 left-0 z-20 bg-gray-800 text-white p-2 rounded-tl-lg rounded-br-lg hover:bg-gray-700 transition-colors shadow-lg"
         onClick={onRestartAnimations}
         title="Reiniciar Animações"
         style={{
@@ -292,17 +315,17 @@ export const Chart = ({
         </svg>
       </motion.button>
 
-      {/* Code button tab */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="absolute top-0 right-0 z-20 bg-gray-800 text-white px-4 py-2 rounded-bl-lg font-medium text-sm hover:bg-gray-700 transition-colors shadow-lg"
-        onClick={onOpenCodeDrawer}
-        style={{
-          transform: "translateY(-1px)",
-        }}
-      >
-        <span className="flex items-center gap-2">
+      {/* Download button tab */}
+      <div className="absolute top-0 right-0 z-20 download-menu-container">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="bg-gray-800 text-white px-3 py-2 rounded-tr-lg rounded-bl-lg font-medium text-sm hover:bg-gray-700 transition-colors shadow-lg"
+          onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+          style={{
+            transform: "translateY(-1px)",
+          }}
+        >
           <svg
             width="16"
             height="16"
@@ -313,39 +336,118 @@ export const Chart = ({
             strokeLinecap="round"
             strokeLinejoin="round"
             role="img"
-            aria-label="Código"
+            aria-label="Download"
           >
-            <polyline points="16 18 22 12 16 6" />
-            <polyline points="8 6 2 12 8 18" />
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7,10 12,15 17,10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Code
-        </span>
-      </motion.button>
-      {/* Grid background */}
-      <svg
-        width={width}
-        height={height}
-        className="absolute inset-0"
-        role="img"
-        aria-label="Grid background"
-      >
-        <defs>
-          <pattern
-            id="grid"
-            width={20}
-            height={20}
-            patternUnits="userSpaceOnUse"
+        </motion.button>
+
+        {/* Download menu */}
+        {showDownloadMenu && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[120px]"
           >
-            <path
-              d="M 20 0 L 0 0 0 20"
-              fill="none"
-              stroke="#f0f0f0"
-              strokeWidth="1"
-            />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-      </svg>
+            <button
+              onClick={() => {
+                onDownloadChart?.("svg");
+                setShowDownloadMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14,2 14,8 20,8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10,9 9,9 8,9" />
+              </svg>
+              SVG
+            </button>
+            <button
+              onClick={() => {
+                onDownloadChart?.("png");
+                setShowDownloadMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21,15 16,10 5,21" />
+              </svg>
+              PNG
+            </button>
+            <button
+              onClick={() => {
+                onDownloadChart?.("gif");
+                setShowDownloadMenu(false);
+              }}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21,15 16,10 5,21" />
+                <path d="M12 12h.01" />
+              </svg>
+              GIF (Animado)
+            </button>
+          </motion.div>
+        )}
+      </div>
+      {/* Grid background */}
+      {showGrid && (
+        <svg
+          width={width}
+          height={height}
+          className="absolute inset-0"
+          role="img"
+          aria-label="Grid background"
+        >
+          <defs>
+            <pattern
+              id="grid"
+              width={20}
+              height={20}
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 20 0 L 0 0 0 20"
+                fill="none"
+                stroke="#f0f0f0"
+                strokeWidth="1"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+      )}
 
       {/* Axes */}
       {axesMode !== "off" && (
@@ -506,9 +608,10 @@ export const Chart = ({
       <svg
         width={width}
         height={height}
-        className="relative z-10"
+        className="relative z-10 outline-none focus:outline-none chart-svg"
         role="img"
         aria-label="Chart with points and lines"
+        tabIndex={-1}
         onClick={handleChartClick}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -516,7 +619,6 @@ export const Chart = ({
             handleChartClick(e as any);
           }
         }}
-        tabIndex={0}
         style={{ cursor: getCursorStyle() }}
       >
         {/* Lines between points */}
@@ -622,6 +724,11 @@ export const Chart = ({
         {points.map((point, index) => {
           const isControlPoint = point.id.startsWith("control-");
           const isDragging = draggedPointId === point.id;
+
+          // Hide control points when not in curve editing mode
+          if (isControlPoint && !isAddingCurves) {
+            return null;
+          }
 
           return (
             <motion.g key={point.id}>

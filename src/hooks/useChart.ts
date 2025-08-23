@@ -47,6 +47,7 @@ export const useChart = () => {
   const [actuallyDragged, setActuallyDragged] = useState(false);
   const [dragMoveCount, setDragMoveCount] = useState(0);
   const [axesMode, setAxesMode] = useState<AxesMode>("off");
+  const [showGrid, setShowGrid] = useState(true);
 
   // Load data from localStorage only on client side
   useEffect(() => {
@@ -458,6 +459,11 @@ export const useChart = () => {
     setAxesMode(mode);
   }, []);
 
+  // Toggle grid visibility
+  const toggleGrid = useCallback(() => {
+    setShowGrid((prev) => !prev);
+  }, []);
+
   return {
     chartData,
     isAddingPoints,
@@ -470,6 +476,7 @@ export const useChart = () => {
     cursorPosition,
     pointStyleMenu,
     axesMode,
+    showGrid,
     addPoint,
     addPointByClick,
     addControlPointToLine,
@@ -495,5 +502,6 @@ export const useChart = () => {
     saveChartData,
     loadChartData,
     setAxesModeHandler,
+    toggleGrid,
   };
 };

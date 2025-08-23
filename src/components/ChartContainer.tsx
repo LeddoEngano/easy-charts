@@ -23,6 +23,7 @@ export const ChartContainer = () => {
     cursorPosition,
     pointStyleMenu,
     axesMode,
+    showGrid,
     addPointByClick,
     addControlPointToLine,
     updatePointPosition,
@@ -45,6 +46,7 @@ export const ChartContainer = () => {
     closePointStyleMenu,
     updatePointStyle,
     setAxesModeHandler,
+    toggleGrid,
   } = useChart();
 
   const [isCodeDrawerOpen, setIsCodeDrawerOpen] = useState(false);
@@ -132,6 +134,227 @@ export const ChartContainer = () => {
     setIsCodeDrawerOpen(false);
   };
 
+  const handleDownloadChart = (format: "svg" | "png" | "gif") => {
+    const chartContainer = document.querySelector(
+      ".chart-container",
+    ) as HTMLElement;
+    if (!chartContainer) {
+      console.error("Chart container not found!");
+      return;
+    }
+
+    // Create a combined SVG from all chart elements
+    const combinedSVG = createCombinedSVG(chartContainer);
+
+    switch (format) {
+      case "svg":
+        downloadSVG(combinedSVG);
+        break;
+      case "png":
+        downloadPNG(combinedSVG);
+        break;
+      case "gif":
+        // TODO: Implement GIF download
+        alert("Download de GIF será implementado em breve!");
+        break;
+    }
+  };
+
+  const createCombinedSVG = (container: HTMLElement): SVGElement => {
+    // Create a new SVG element that will contain everything
+    const combinedSVG = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg",
+    );
+    combinedSVG.setAttribute("width", "800");
+    combinedSVG.setAttribute("height", "600");
+    combinedSVG.setAttribute("viewBox", "0 0 800 600");
+    combinedSVG.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+
+    // Set white background
+    const background = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "rect",
+    );
+    background.setAttribute("width", "100%");
+    background.setAttribute("height", "100%");
+    background.setAttribute("fill", "white");
+    combinedSVG.appendChild(background);
+
+    // Find and combine all SVG elements in the correct order
+    const svgElements = container.querySelectorAll("svg");
+
+    svgElements.forEach((svg) => {
+      const ariaLabel = svg.getAttribute("aria-label");
+
+      // Skip if this is a button or interface element
+      if (svg.closest("button") || svg.closest(".download-menu-container")) {
+        return;
+      }
+
+      // Skip grid if it's disabled
+      if (ariaLabel === "Grid background" && !showGrid) {
+        return;
+      }
+
+      // Skip axes if they're disabled
+      if (ariaLabel === "Chart axes" && axesMode === "off") {
+        return;
+      }
+
+      // Clone the SVG content
+      const svgClone = svg.cloneNode(true) as SVGElement;
+
+      // Extract all children from the cloned SVG and add to combined SVG
+      while (svgClone.firstChild) {
+        const child = svgClone.firstChild;
+        combinedSVG.appendChild(child);
+      }
+    });
+
+    // Clean up the combined SVG
+    return createCleanSVG(combinedSVG);
+  };
+
+  const createCleanSVG = (originalSVG: SVGElement): SVGElement => {
+    // Clone the original SVG
+    const cleanSVG = originalSVG.cloneNode(true) as SVGElement;
+
+    // Remove tooltip elements (elements with title or aria-label containing "tooltip")
+    const tooltipElements = cleanSVG.querySelectorAll(
+      '[title*="tooltip"], [aria-label*="tooltip"]',
+    );
+    tooltipElements.forEach((el) => el.remove());
+
+    // Remove any elements with class containing "tooltip"
+    const tooltipClassElements =
+      cleanSVG.querySelectorAll('[class*="tooltip"]');
+    tooltipClassElements.forEach((el) => el.remove());
+
+    // Remove any text elements that might be tooltips (usually small text)
+    const textElements = cleanSVG.querySelectorAll("text");
+    textElements.forEach((text) => {
+      const textContent = text.textContent?.toLowerCase() || "";
+      if (
+        textContent.includes("tooltip") ||
+        textContent.includes("dica") ||
+        textContent.includes("clique")
+      ) {
+        text.remove();
+      }
+    });
+
+    // Grid and axes are now handled in createCombinedSVG
+    // This function now focuses on cleaning up interactive elements
+
+    // Remove control points (they should not appear in final output)
+    const controlPointGroups = cleanSVG.querySelectorAll('g[key*="control-"]');
+    controlPointGroups.forEach((el) => el.remove());
+
+    // Also remove any circles that might be control points based on position/size
+    const allGroups = cleanSVG.querySelectorAll("g");
+    allGroups.forEach((group) => {
+      const key = group.getAttribute("key");
+      if (key && key.includes("control-")) {
+        group.remove();
+      }
+    });
+
+    // Remove any interactive elements that shouldn't be in the download
+    const interactiveElements = cleanSVG.querySelectorAll(
+      "[onclick], [onkeydown], [tabindex]",
+    );
+    interactiveElements.forEach((el) => {
+      el.removeAttribute("onclick");
+      el.removeAttribute("onkeydown");
+      el.removeAttribute("tabindex");
+    });
+
+    // Remove any elements with pointer-events (interactive areas)
+    const pointerElements = cleanSVG.querySelectorAll(
+      '[style*="pointer-events"]',
+    );
+    pointerElements.forEach((el) => {
+      const style = el.getAttribute("style");
+      if (style) {
+        el.setAttribute(
+          "style",
+          style.replace(/pointer-events:\s*[^;]+;?/g, ""),
+        );
+      }
+    });
+
+    // Remove any invisible clickable areas (lines with transparent stroke)
+    const invisibleLines = cleanSVG.querySelectorAll(
+      'line[stroke="transparent"], line[stroke="rgba(0,0,0,0)"]',
+    );
+    invisibleLines.forEach((el) => el.remove());
+
+    // Clean up any empty style attributes
+    const elementsWithStyle = cleanSVG.querySelectorAll("[style]");
+    elementsWithStyle.forEach((el) => {
+      const style = el.getAttribute("style");
+      if (style && style.trim() === "") {
+        el.removeAttribute("style");
+      }
+    });
+
+    return cleanSVG;
+  };
+
+  const downloadSVG = (svgElement: SVGElement) => {
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+    const svgUrl = URL.createObjectURL(svgBlob);
+
+    const downloadLink = document.createElement("a");
+    downloadLink.href = svgUrl;
+    downloadLink.download = `chart-${Date.now()}.svg`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(svgUrl);
+  };
+
+  const downloadPNG = (svgElement: SVGElement) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width = 800;
+    canvas.height = 600;
+
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+    const svgUrl = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const pngUrl = URL.createObjectURL(blob);
+        const downloadLink = document.createElement("a");
+        downloadLink.href = pngUrl;
+        downloadLink.download = `chart-${Date.now()}.png`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(pngUrl);
+      }, "image/png");
+
+      URL.revokeObjectURL(svgUrl);
+    };
+    img.src = svgUrl;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -155,7 +378,13 @@ export const ChartContainer = () => {
         />
 
         <div className="flex-1 flex flex-col">
-          <Toolbar axesMode={axesMode} onAxesModeChange={setAxesModeHandler} />
+          <Toolbar
+            axesMode={axesMode}
+            onAxesModeChange={setAxesModeHandler}
+            showGrid={showGrid}
+            onToggleGrid={toggleGrid}
+            onOpenCodeDrawer={handleOpenCodeDrawer}
+          />
 
           <div
             className="flex-1 flex items-center justify-center p-8 relative"
@@ -181,9 +410,10 @@ export const ChartContainer = () => {
                 draggedPointId={draggedPointId}
                 hoveredLineId={hoveredLineId}
                 cursorPosition={cursorPosition}
-                onOpenCodeDrawer={handleOpenCodeDrawer}
                 onRestartAnimations={restartAnimations}
+                onDownloadChart={handleDownloadChart}
                 axesMode={axesMode}
+                showGrid={showGrid}
                 width={800}
                 height={600}
               />
@@ -247,6 +477,8 @@ export const ChartContainer = () => {
         isOpen={isCodeDrawerOpen}
         onClose={handleCloseCodeDrawer}
         chartData={chartData}
+        showGrid={showGrid}
+        axesMode={axesMode}
       />
     </div>
   );
