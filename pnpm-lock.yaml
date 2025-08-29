@@ -42,8 +42,8 @@ importers:
         specifier: ^5.5.0
         version: 5.5.0(react@19.1.0)
       react-syntax-highlighter:
-        specifier: ^15.6.3
-        version: 15.6.3(react@19.1.0)
+        specifier: ^15.6.6
+        version: 15.6.6(react@19.1.0)
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
@@ -844,8 +844,8 @@ packages:
     peerDependencies:
       react: '*'
 
-  react-syntax-highlighter@15.6.3:
-    resolution: {integrity: sha512-HebdyA9r20hgmA0q8RyRJ4c/vB4E6KL2HeWb5MNjU3iJEiT2w9jfU2RJsmI6f3Cy3SGE5tm0AIkBzM/E7e9/lQ==}
+  react-syntax-highlighter@15.6.6:
+    resolution: {integrity: sha512-DgXrc+AZF47+HvAPEmn7Ua/1p10jNoVZVI/LoPiYdtY+OM+/nG5yefLHKJwdKqY1adMuHFbeyBaG9j64ML7vTw==}
     peerDependencies:
       react: '>= 0.14.0'
 
@@ -1549,7 +1549,7 @@ snapshots:
     dependencies:
       react: 19.1.0
 
-  react-syntax-highlighter@15.6.3(react@19.1.0):
+  react-syntax-highlighter@15.6.6(react@19.1.0):
     dependencies:
       '@babel/runtime': 7.28.3
       highlight.js: 10.7.3
