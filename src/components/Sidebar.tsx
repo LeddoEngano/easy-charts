@@ -48,13 +48,13 @@ export const Sidebar = ({
 
   // Quick select colors
   const quickColors = [
-    "#3b82f6", // Blue
+    "#000000", // Black
     "#ef4444", // Red
-    "#10b981", // Green
+    "#bfff70", // Green
     "#f59e0b", // Yellow
     "#8b5cf6", // Purple
     "#ec4899", // Pink
-    "#06b6d4", // Cyan
+    "#3b82f6", // Cyan
     "#f97316", // Orange
   ];
 
@@ -75,13 +75,13 @@ export const Sidebar = ({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={onToggleAddingPoints}
-        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isAddingPoints
-          ? "bg-blue-500 text-white shadow-lg"
+        className={`w-10 h-10 cursor-pointer rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isAddingPoints
+          ? "bg-ez-500 text-ez-900 shadow-lg"
           : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
           }`}
         title="Adicionar Pontos"
       >
-        <CgAdd />
+        <CgAdd size={20} />
       </motion.button>
 
       {/* Add Curves Tool */}
@@ -94,7 +94,7 @@ export const Sidebar = ({
           ? "bg-purple-500 text-white shadow-lg"
           : lines.length === 0
             ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-            : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+            : "bg-gray-800 text-gray-300 cursor-pointer hover:bg-gray-700 hover:text-white"
           }`}
         title="Adicionar Curvas"
       >
@@ -106,8 +106,8 @@ export const Sidebar = ({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={onToggleAddingText}
-        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isAddingText
-          ? "bg-green-500 text-white shadow-lg"
+        className={`w-10 h-10 rounded-lg cursor-pointer mb-3 flex items-center justify-center transition-all duration-200 ${isAddingText
+          ? "bg-blue-500 text-white shadow-lg"
           : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
           }`}
         title="Adicionar Texto"
@@ -120,14 +120,11 @@ export const Sidebar = ({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={onToggleDeletingLines}
-        disabled={lines.length === 0}
         className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isDeletingLines
           ? "bg-red-500 text-white shadow-lg"
-          : lines.length === 0
-            ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-            : "bg-gray-800 text-gray-300 hover:bg-red-600 hover:text-white"
+          : "bg-gray-800 text-gray-300 cursor-pointer hover:bg-red-600 hover:text-white"
           }`}
-        title="Excluir Linhas"
+        title="Excluir Elementos"
       >
         <MdDeleteOutline />
       </motion.button>
@@ -161,7 +158,7 @@ export const Sidebar = ({
                 }
                 onMouseEnter={() => onLineHover(line.id)}
                 onMouseLeave={() => onLineHover(null)}
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-medium relative"
+                className="w-10 h-10 cursor-pointer rounded-lg flex items-center justify-center text-xs font-medium relative"
                 style={{ backgroundColor: line.color }}
                 title={`Linha ${index + 1} - Clique para alterar cor`}
               >
@@ -201,7 +198,7 @@ export const Sidebar = ({
                             type="button"
                             key={color}
                             onClick={() => onLineColorChange(line.id, color)}
-                            className={`w-6 h-6 rounded border-2 hover:scale-110 transition-transform ${line.color === color
+                            className={`w-6 h-6 cursor-pointer rounded border-2 hover:scale-110 transition-transform ${line.color === color
                               ? "border-white"
                               : "border-gray-600"
                               }`}
@@ -265,7 +262,7 @@ export const Sidebar = ({
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onTextClick?.(text)}
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-600"
+                className="w-10 h-10 cursor-pointer rounded-lg flex items-center justify-center text-xs font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-600"
                 title={`Texto: "${text.content}" - Clique para editar`}
               >
                 <svg

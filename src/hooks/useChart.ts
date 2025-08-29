@@ -6,6 +6,7 @@ const STORAGE_KEY = "easy-charts-data";
 
 // Predefined colors for automatic color cycling
 const LINE_COLORS = [
+  "#9edc53", // Green
   "#3b82f6", // Blue
   "#ef4444", // Red
   "#10b981", // Green

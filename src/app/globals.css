@@ -38,6 +38,17 @@ input[type="range"]::-moz-range-thumb {
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-ez: var(--ez-color);
+  --color-ez-50: var(--ez-color-50);
+  --color-ez-100: var(--ez-color-100);
+  --color-ez-200: var(--ez-color-200);
+  --color-ez-300: var(--ez-color-300);
+  --color-ez-400: var(--ez-color-400);
+  --color-ez-500: var(--ez-color-500);
+  --color-ez-600: var(--ez-color-600);
+  --color-ez-700: var(--ez-color-700);
+  --color-ez-800: var(--ez-color-800);
+  --color-ez-900: var(--ez-color-900);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -98,6 +109,17 @@ input[type="range"]::-moz-range-thumb {
   --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
   --sidebar-border: oklch(0.923 0.003 48.717);
   --sidebar-ring: oklch(0.709 0.01 56.259);
+  --ez-color: #bfff70;
+  --ez-color-50: #f7ffeb;
+  --ez-color-100: #efffe6;
+  --ez-color-200: #d9ffcc;
+  --ez-color-300: #c3ffb3;
+  --ez-color-400: #bfff70;
+  --ez-color-500: #a6e65c;
+  --ez-color-600: #8ccc48;
+  --ez-color-700: #72b334;
+  --ez-color-800: #5a9920;
+  --ez-color-900: #427f0c;
 }
 
 .dark {

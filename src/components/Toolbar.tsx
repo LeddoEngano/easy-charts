@@ -45,8 +45,8 @@ export const Toolbar = ({
             onClick={() =>
               onAxesModeChange(axesMode === "quadrants" ? "off" : "quadrants")
             }
-            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${axesMode === "quadrants"
-              ? "bg-blue-100 text-blue-700 border border-blue-200"
+            className={`w-9 h-9 p-1 cursor-pointer rounded-lg flex items-center justify-center transition-all duration-200 ${axesMode === "quadrants"
+              ? "bg-ez border border-ez-200"
               : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
               }`}
             title="4 Quadrantes"
@@ -61,8 +61,8 @@ export const Toolbar = ({
             onClick={() =>
               onAxesModeChange(axesMode === "single" ? "off" : "single")
             }
-            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${axesMode === "single"
-              ? "bg-blue-100 text-blue-700 border border-blue-200"
+            className={`w-9 h-9 cursor-pointer rounded-lg flex items-center justify-center transition-all duration-200 ${axesMode === "single"
+              ? "bg-ez border border-ez-200"
               : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
               }`}
             title="1 Quadrante"
@@ -75,8 +75,8 @@ export const Toolbar = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onToggleGrid}
-            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${showGrid
-              ? "bg-blue-100 text-blue-700 border border-blue-200"
+            className={`w-9 h-9 cursor-pointer rounded-lg flex items-center justify-center transition-all duration-200 ${showGrid
+              ? "bg-ez border border-ez-200"
               : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
               }`}
             title={showGrid ? "Ocultar grid" : "Mostrar grid"}
@@ -102,8 +102,8 @@ export const Toolbar = ({
                 whileTap={{ scale: 0.95 }}
                 onClick={onUndo}
                 disabled={!canUndo}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 border ${canUndo
-                  ? "bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400"
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 border ${canUndo
+                  ? "bg-white hover:bg-gray-50 cursor-pointer text-gray-700 border-gray-300 hover:border-gray-400"
                   : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                   }`}
                 title="Desfazer (Ctrl+Z)"
@@ -119,8 +119,8 @@ export const Toolbar = ({
                 whileTap={{ scale: 0.95 }}
                 onClick={onRedo}
                 disabled={!canRedo}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 border ${canRedo
-                  ? "bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400"
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 border ${canRedo
+                  ? "bg-white hover:bg-gray-50 text-gray-700 cursor-pointer border-gray-300 hover:border-gray-400"
                   : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                   }`}
                 title="Refazer (Ctrl+Shift+Z)"
@@ -136,7 +136,7 @@ export const Toolbar = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onOpenCodeDrawer}
-              className="bg-gray-800 text-white px-3 py-2 rounded-lg font-medium text-sm hover:bg-gray-700 transition-colors shadow-sm flex items-center gap-2"
+              className="bg-gray-800 cursor-pointer text-white px-3 py-2 rounded-lg font-medium text-sm hover:bg-gray-700 transition-colors shadow-sm flex items-center gap-2"
               title="Exportar código"
             >
               <svg

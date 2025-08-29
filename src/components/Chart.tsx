@@ -527,30 +527,33 @@ export const Chart = ({
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="absolute top-0 left-0 z-20 bg-gray-800 text-white p-2 rounded-tl-lg rounded-br-lg hover:bg-gray-700 transition-colors shadow-lg"
+        className="absolute cursor-pointer top-0 left-0 z-20 bg-gray-800 text-white p-2 rounded-tl-lg rounded-br-lg hover:bg-gray-700 transition-colors shadow-lg"
         onClick={onRestartAnimations}
         title="Reiniciar Animações"
         style={{
           transform: "translateY(-1px)",
         }}
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          role="img"
-          aria-label="Reiniciar animações"
-        >
-          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-          <path d="M21 3v5h-5" />
-          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-          <path d="M3 21v-5h5" />
-        </svg>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">Animations</span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            role="img"
+            aria-label="Reiniciar animações"
+          >
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+            <path d="M3 21v-5h5" />
+          </svg>
+        </div>
       </motion.button>
 
       {/* Download button tab */}
@@ -558,7 +561,7 @@ export const Chart = ({
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-gray-800 text-white px-3 py-2 rounded-tr-lg rounded-bl-lg font-medium text-sm hover:bg-gray-700 transition-colors shadow-lg"
+          className="bg-gray-800 cursor-pointer text-white px-3 py-2 rounded-tr-lg rounded-bl-lg font-medium text-sm hover:bg-gray-700 transition-colors shadow-lg"
           onClick={() => setShowDownloadMenu(!showDownloadMenu)}
           style={{
             transform: "translateY(-1px)",
