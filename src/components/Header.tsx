@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { FaXTwitter } from "react-icons/fa6";
 import { FaInstagram } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import { FiRotateCcw, FiRotateCw } from "react-icons/fi";
 
 interface HeaderProps {
@@ -13,7 +13,12 @@ interface HeaderProps {
   canRedo?: boolean;
 }
 
-export const Header = ({ onUndo, onRedo, canUndo = false, canRedo = false }: HeaderProps) => {
+export const Header = ({
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+}: HeaderProps) => {
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
@@ -39,9 +44,7 @@ export const Header = ({ onUndo, onRedo, canUndo = false, canRedo = false }: Hea
               />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-2xl font-bold text-white">
-                Ez Charts
-              </h1>
+              <h1 className="text-2xl font-bold text-white">Ez Charts</h1>
               <span className="text-sm text-gray-300 font-medium">
                 Enjoy, it's free!
               </span>

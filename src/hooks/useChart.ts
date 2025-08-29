@@ -1,6 +1,13 @@
-import { useCallback, useState, useEffect, useRef } from "react";
-import type { ChartData, Line, Point, PointStyle, LineStyle, Text } from "@/types/chart";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { AxesMode } from "@/components/Toolbar";
+import type {
+  ChartData,
+  Line,
+  LineStyle,
+  Point,
+  PointStyle,
+  Text,
+} from "@/types/chart";
 
 const STORAGE_KEY = "easy-charts-data";
 
@@ -163,7 +170,6 @@ export const useChart = () => {
 
   // Save to history when chart data changes (but not during undo/redo)
   useEffect(() => {
-
     // Check if this is an undo/redo action - use a more robust approach
     if (isUndoRedoActionRef.current) {
       // Only reset the ref here, don't reset the state yet to avoid timing issues
@@ -380,9 +386,9 @@ export const useChart = () => {
         lines: prev.lines.map((line) =>
           line.id === lineId
             ? {
-              ...line,
-              controlPointIds: [...line.controlPointIds, controlPoint.id],
-            }
+                ...line,
+                controlPointIds: [...line.controlPointIds, controlPoint.id],
+              }
             : line,
         ),
       }));
@@ -393,7 +399,6 @@ export const useChart = () => {
   // Update point position (for dragging)
   const updatePointPosition = useCallback(
     (pointId: string, x: number, y: number) => {
-
       setDragMoveCount((prev) => {
         const newCount = prev + 1;
 
@@ -406,8 +411,7 @@ export const useChart = () => {
 
       if (dragStartPosition) {
         const distance = Math.sqrt(
-          Math.pow(x - dragStartPosition.x, 2) +
-          Math.pow(y - dragStartPosition.y, 2),
+          (x - dragStartPosition.x) ** 2 + (y - dragStartPosition.y) ** 2,
         );
 
         if (distance > 8) {
@@ -505,7 +509,9 @@ export const useChart = () => {
           points: prev.points.filter((point) => point.id !== pointId),
           lines: prev.lines.map((line) => ({
             ...line,
-            controlPointIds: line.controlPointIds.filter((cpId) => cpId !== pointId),
+            controlPointIds: line.controlPointIds.filter(
+              (cpId) => cpId !== pointId,
+            ),
           })),
         };
       } else {
@@ -641,48 +647,54 @@ export const useChart = () => {
   }, []);
 
   // Preview line style temporarily
-  const previewLineStyle = useCallback((lineId: string | null, style: LineStyle) => {
-    if (!lineId) return;
+  const previewLineStyle = useCallback(
+    (lineId: string | null, style: LineStyle) => {
+      if (!lineId) return;
 
-    setChartData((prev) => ({
-      ...prev,
-      lines: prev.lines.map((line) =>
-        line.id === lineId ? { ...line, style } : line,
-      ),
-    }));
-  }, []);
+      setChartData((prev) => ({
+        ...prev,
+        lines: prev.lines.map((line) =>
+          line.id === lineId ? { ...line, style } : line,
+        ),
+      }));
+    },
+    [],
+  );
 
   // Preview line color temporarily
-  const previewLineColor = useCallback((lineId: string | null, color: string) => {
-    if (!lineId) return;
+  const previewLineColor = useCallback(
+    (lineId: string | null, color: string) => {
+      if (!lineId) return;
 
-    setChartData((prev) => {
-      const targetLine = prev.lines.find((line) => line.id === lineId);
-      if (!targetLine) return prev;
+      setChartData((prev) => {
+        const targetLine = prev.lines.find((line) => line.id === lineId);
+        if (!targetLine) return prev;
 
-      // Update line color temporarily
-      const updatedLines = prev.lines.map((line) =>
-        line.id === lineId ? { ...line, color } : line,
-      );
+        // Update line color temporarily
+        const updatedLines = prev.lines.map((line) =>
+          line.id === lineId ? { ...line, color } : line,
+        );
 
-      // Update points that belong to this line (start and end points)
-      const updatedPoints = prev.points.map((point) => {
-        if (
-          point.id === targetLine.startPointId ||
-          point.id === targetLine.endPointId
-        ) {
-          return { ...point, color };
-        }
-        return point;
+        // Update points that belong to this line (start and end points)
+        const updatedPoints = prev.points.map((point) => {
+          if (
+            point.id === targetLine.startPointId ||
+            point.id === targetLine.endPointId
+          ) {
+            return { ...point, color };
+          }
+          return point;
+        });
+
+        return {
+          ...prev,
+          lines: updatedLines,
+          points: updatedPoints,
+        };
       });
-
-      return {
-        ...prev,
-        lines: updatedLines,
-        points: updatedPoints,
-      };
-    });
-  }, []);
+    },
+    [],
+  );
 
   // Start new line mode
   const startNewLine = useCallback(() => {
@@ -695,13 +707,16 @@ export const useChart = () => {
   }, []);
 
   // Update control point preview
-  const updateControlPointPreview = useCallback((lineId: string | null, x?: number, y?: number) => {
-    if (lineId && x !== undefined && y !== undefined) {
-      setControlPointPreview({ lineId, x, y });
-    } else {
-      setControlPointPreview(null);
-    }
-  }, []);
+  const updateControlPointPreview = useCallback(
+    (lineId: string | null, x?: number, y?: number) => {
+      if (lineId && x !== undefined && y !== undefined) {
+        setControlPointPreview({ lineId, x, y });
+      } else {
+        setControlPointPreview(null);
+      }
+    },
+    [],
+  );
 
   // Toggle delete mode
   const toggleDeletingLines = useCallback(() => {
@@ -758,14 +773,17 @@ export const useChart = () => {
   }, []);
 
   // Preview point style temporarily
-  const previewPointStyle = useCallback((pointId: string, style: PointStyle) => {
-    setChartData((prev) => ({
-      ...prev,
-      points: prev.points.map((point) =>
-        point.id === pointId ? { ...point, style } : point,
-      ),
-    }));
-  }, []);
+  const previewPointStyle = useCallback(
+    (pointId: string, style: PointStyle) => {
+      setChartData((prev) => ({
+        ...prev,
+        points: prev.points.map((point) =>
+          point.id === pointId ? { ...point, style } : point,
+        ),
+      }));
+    },
+    [],
+  );
 
   // Check if should open menu (simple logic)
   const shouldOpenMenu = useCallback(() => {
@@ -790,7 +808,6 @@ export const useChart = () => {
       const previousState = history[newIndex];
 
       if (previousState) {
-
         // Set undo/redo flag BEFORE any state changes
         isUndoRedoActionRef.current = true;
         setIsUndoRedoAction(true);
@@ -799,10 +816,10 @@ export const useChart = () => {
         setHistoryIndex(newIndex);
         setChartData(JSON.parse(JSON.stringify(previousState)));
       } else {
-        console.log('Undo failed - previousState is null/undefined');
+        console.log("Undo failed - previousState is null/undefined");
       }
     } else {
-      console.log('Undo blocked - no previous state available');
+      console.log("Undo blocked - no previous state available");
     }
   }, [historyIndex, history]);
 
@@ -821,10 +838,10 @@ export const useChart = () => {
         setHistoryIndex(newIndex);
         setChartData(JSON.parse(JSON.stringify(nextState)));
       } else {
-        console.log('Redo failed - nextState is null/undefined');
+        console.log("Redo failed - nextState is null/undefined");
       }
     } else {
-      console.log('Redo blocked - no next state available');
+      console.log("Redo blocked - no next state available");
     }
   }, [historyIndex, history]);
 

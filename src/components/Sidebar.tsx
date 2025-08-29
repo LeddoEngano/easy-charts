@@ -2,12 +2,13 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import type { Text, LineStyle } from "@/types/chart";
-import { TbEaseInOutControlPoints } from "react-icons/tb";
 import { CgAdd } from "react-icons/cg";
-import { RxText } from "react-icons/rx";
 import { MdDeleteOutline } from "react-icons/md";
+import { RxText } from "react-icons/rx";
+import { TbEaseInOutControlPoints } from "react-icons/tb";
 import { LineStyleMenu } from "@/components/LineStyleMenu";
+import type { LineStyle, Text } from "@/types/chart";
+
 interface SidebarProps {
   onToggleAddingPoints: () => void;
   onToggleAddingCurves: () => void;
@@ -51,7 +52,9 @@ export const Sidebar = ({
   onTextClick,
   onTextDelete,
 }: SidebarProps) => {
-  const [showLineStyleMenu, setShowLineStyleMenu] = useState<string | null>(null);
+  const [showLineStyleMenu, setShowLineStyleMenu] = useState<string | null>(
+    null,
+  );
 
   // Close line style menu when clicking on backdrop
   const handleBackdropClick = () => {
@@ -70,10 +73,11 @@ export const Sidebar = ({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={onToggleAddingPoints}
-        className={`w-10 h-10 cursor-pointer rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isAddingPoints
-          ? "bg-ez-500 text-ez-900 shadow-lg"
-          : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
-          }`}
+        className={`w-10 h-10 cursor-pointer rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${
+          isAddingPoints
+            ? "bg-ez-500 text-ez-900 shadow-lg"
+            : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+        }`}
         title="Adicionar Pontos"
       >
         <CgAdd size={20} />
@@ -85,12 +89,13 @@ export const Sidebar = ({
         whileTap={{ scale: 0.9 }}
         onClick={onToggleAddingCurves}
         disabled={lines.length === 0}
-        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isAddingCurves
-          ? "bg-purple-500 text-white shadow-lg"
-          : lines.length === 0
-            ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-            : "bg-gray-800 text-gray-300 cursor-pointer hover:bg-gray-700 hover:text-white"
-          }`}
+        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${
+          isAddingCurves
+            ? "bg-purple-500 text-white shadow-lg"
+            : lines.length === 0
+              ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+              : "bg-gray-800 text-gray-300 cursor-pointer hover:bg-gray-700 hover:text-white"
+        }`}
         title="Adicionar Curvas"
       >
         <TbEaseInOutControlPoints />
@@ -101,10 +106,11 @@ export const Sidebar = ({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={onToggleAddingText}
-        className={`w-10 h-10 rounded-lg cursor-pointer mb-3 flex items-center justify-center transition-all duration-200 ${isAddingText
-          ? "bg-blue-500 text-white shadow-lg"
-          : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
-          }`}
+        className={`w-10 h-10 rounded-lg cursor-pointer mb-3 flex items-center justify-center transition-all duration-200 ${
+          isAddingText
+            ? "bg-blue-500 text-white shadow-lg"
+            : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+        }`}
         title="Adicionar Texto"
       >
         <RxText />
@@ -115,10 +121,11 @@ export const Sidebar = ({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={onToggleDeletingLines}
-        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isDeletingLines
-          ? "bg-red-500 text-white shadow-lg"
-          : "bg-gray-800 text-gray-300 cursor-pointer hover:bg-red-600 hover:text-white"
-          }`}
+        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${
+          isDeletingLines
+            ? "bg-red-500 text-white shadow-lg"
+            : "bg-gray-800 text-gray-300 cursor-pointer hover:bg-red-600 hover:text-white"
+        }`}
         title="Excluir Elementos"
       >
         <MdDeleteOutline />

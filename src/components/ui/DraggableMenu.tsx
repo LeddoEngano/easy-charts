@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useRef, type ReactNode } from "react";
+import { type ReactNode, useRef, useState } from "react";
 
 interface DraggableMenuProps {
   title: string;

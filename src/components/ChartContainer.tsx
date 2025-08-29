@@ -1,22 +1,21 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import { useChart } from "@/hooks/useChart";
+import { useEffect, useState } from "react";
 import {
-  useCanvasInteraction,
   type CanvasItem,
   type InteractionEvent,
+  useCanvasInteraction,
 } from "@/hooks/useCanvasInteraction";
+import { useChart } from "@/hooks/useChart";
 import type { Line, Point, Text } from "@/types/chart";
 import { Chart } from "./Chart";
+import { CodeDrawer } from "./CodeDrawer";
 import { Header } from "./Header";
 import { PointStyleMenu } from "./PointStyleMenu";
-import { TextStyleMenu } from "./TextStyleMenu";
 import { Sidebar } from "./Sidebar";
-import { CodeDrawer } from "./CodeDrawer";
-import { Toolbar, type AxesMode } from "./Toolbar";
-
+import { TextStyleMenu } from "./TextStyleMenu";
+import { type AxesMode, Toolbar } from "./Toolbar";
 
 export const ChartContainer = () => {
   const {
@@ -82,7 +81,7 @@ export const ChartContainer = () => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Check if Ctrl+Z (Windows/Linux) or Cmd+Z (Mac) is pressed
-      if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+      if ((event.ctrlKey || event.metaKey) && event.key === "z") {
         event.preventDefault();
 
         // Check if Shift is also pressed for redo (Ctrl+Shift+Z or Cmd+Shift+Z)
@@ -98,7 +97,7 @@ export const ChartContainer = () => {
       }
 
       // Also support Ctrl+Y for redo (Windows/Linux)
-      if ((event.ctrlKey || event.metaKey) && event.key === 'y') {
+      if ((event.ctrlKey || event.metaKey) && event.key === "y") {
         event.preventDefault();
         if (canRedo) {
           redo();
@@ -106,9 +105,9 @@ export const ChartContainer = () => {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [undo, redo, canUndo, canRedo]);
 
@@ -230,7 +229,6 @@ export const ChartContainer = () => {
   };
 
   const handleChartClick = (x: number, y: number, event?: React.MouseEvent) => {
-
     // Allow delete tool to activate even when interacting with objects
     // Other tools should be blocked when interacting with objects
     if (canvasInteraction.shouldPreventToolActivation && !isDeletingLines) {
@@ -337,7 +335,6 @@ export const ChartContainer = () => {
   };
 
   const handleTextEditEnd = (finalContent: string) => {
-
     if (editingText && finalContent.trim()) {
       updateTextContent(editingText.id, finalContent);
     }
@@ -384,8 +381,7 @@ export const ChartContainer = () => {
           if (!prev) return null;
 
           const hasChanged =
-            Math.abs(prev.x - menuX) > 1 ||
-            Math.abs(prev.y - menuY) > 1;
+            Math.abs(prev.x - menuX) > 1 || Math.abs(prev.y - menuY) > 1;
 
           if (hasChanged) {
             return {
@@ -662,12 +658,7 @@ export const ChartContainer = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-      />
+      <Header onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} />
 
       <div className="flex h-[calc(100vh-64px)]">
         <Sidebar
@@ -806,8 +797,7 @@ export const ChartContainer = () => {
               ?.style || "default"
           }
           currentLabel={
-            chartData.points.find((p) => p.id === pointStyleMenu.pointId)
-              ?.label
+            chartData.points.find((p) => p.id === pointStyleMenu.pointId)?.label
           }
           pointId={pointStyleMenu.pointId}
           onStyleChange={(style) =>

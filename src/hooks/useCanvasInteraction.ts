@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export interface CanvasItem {
   id: string;
@@ -130,8 +130,7 @@ export const useCanvasInteraction = ({
       // Global mouse move handler
       const handleGlobalMouseMove = (e: MouseEvent) => {
         const distance = Math.sqrt(
-          Math.pow(e.clientX - startPos.x, 2) +
-          Math.pow(e.clientY - startPos.y, 2),
+          (e.clientX - startPos.x) ** 2 + (e.clientY - startPos.y) ** 2,
         );
 
         if (distance > dragThreshold && !hasMoved) {

@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
 import { motion } from "framer-motion";
-import type { Text } from "@/types/chart";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DraggableMenu } from "@/components/ui/DraggableMenu";
+import type { Text } from "@/types/chart";
 
 interface TextStyleMenuProps {
   text: Text;
@@ -58,7 +58,7 @@ export function TextStyleMenu({
     text.content
       .replace(/^\*\*(.*)\*\*$/, "$1")
       .replace(/^\*(.*)\*$/, "$1")
-      .replace(/^__(.*)__$/, "$1")
+      .replace(/^__(.*)__$/, "$1"),
   );
 
   // Sync local state with text prop when it changes
@@ -68,7 +68,7 @@ export function TextStyleMenu({
       text.content
         .replace(/^\*\*(.*)\*\*$/, "$1")
         .replace(/^\*(.*)\*$/, "$1")
-        .replace(/^__(.*)__$/, "$1")
+        .replace(/^__(.*)__$/, "$1"),
     );
   }, [text.fontSize, text.content]);
 

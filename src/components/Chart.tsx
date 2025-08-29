@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import type { Line, Point, Text, LineStyle } from "@/types/chart";
-import type { AxesMode } from "./Toolbar";
+import { useEffect, useState } from "react";
+import type { Line, LineStyle, Point, Text } from "@/types/chart";
 import { EditableText } from "./EditableText";
+import type { AxesMode } from "./Toolbar";
 
 interface ChartProps {
   points: Point[];
@@ -194,7 +194,10 @@ export const Chart = ({
     }
   };
 
-  const calculateClosestPointOnLine = (event: React.MouseEvent<SVGElement>, line: Line) => {
+  const calculateClosestPointOnLine = (
+    event: React.MouseEvent<SVGElement>,
+    line: Line,
+  ) => {
     // Get SVG container coordinates, not the line element coordinates
     const svgElement = event.currentTarget.closest("svg");
     if (!svgElement) return null;
@@ -204,7 +207,9 @@ export const Chart = ({
     const clickY = event.clientY - rect.top - padding;
 
     // Get control points for this line
-    const controlPoints = points.filter((p) => line.controlPointIds.includes(p.id));
+    const controlPoints = points.filter((p) =>
+      line.controlPointIds.includes(p.id),
+    );
     const hasControlPoints = controlPoints.length > 0;
 
     if (hasControlPoints) {
@@ -214,7 +219,7 @@ export const Chart = ({
         clickY,
         line.startPoint,
         line.endPoint,
-        controlPoints
+        controlPoints,
       );
     } else {
       // Calculate the closest point on the straight line to the click position
@@ -247,16 +252,16 @@ export const Chart = ({
     clickY: number,
     startPoint: Point,
     endPoint: Point,
-    controlPoints: Point[]
+    controlPoints: Point[],
   ) => {
     let closestPoint = { x: startPoint.x, y: startPoint.y };
     let minDistance = Math.sqrt(
-      Math.pow(clickX - startPoint.x, 2) + Math.pow(clickY - startPoint.y, 2)
+      (clickX - startPoint.x) ** 2 + (clickY - startPoint.y) ** 2,
     );
 
     // Check end point
     const endDistance = Math.sqrt(
-      Math.pow(clickX - endPoint.x, 2) + Math.pow(clickY - endPoint.y, 2)
+      (clickX - endPoint.x) ** 2 + (clickY - endPoint.y) ** 2,
     );
     if (endDistance < minDistance) {
       minDistance = endDistance;
@@ -267,10 +272,15 @@ export const Chart = ({
     const samples = 100;
     for (let i = 0; i <= samples; i++) {
       const t = i / samples;
-      const pointOnCurve = getPointOnBezierCurve(t, startPoint, endPoint, controlPoints);
+      const pointOnCurve = getPointOnBezierCurve(
+        t,
+        startPoint,
+        endPoint,
+        controlPoints,
+      );
 
       const distance = Math.sqrt(
-        Math.pow(clickX - pointOnCurve.x, 2) + Math.pow(clickY - pointOnCurve.y, 2)
+        (clickX - pointOnCurve.x) ** 2 + (clickY - pointOnCurve.y) ** 2,
       );
 
       if (distance < minDistance) {
@@ -287,30 +297,34 @@ export const Chart = ({
     t: number,
     startPoint: Point,
     endPoint: Point,
-    controlPoints: Point[]
+    controlPoints: Point[],
   ) => {
     if (controlPoints.length === 1) {
       // Quadratic Bézier curve
       const cp = controlPoints[0];
-      const x = Math.pow(1 - t, 2) * startPoint.x +
+      const x =
+        (1 - t) ** 2 * startPoint.x +
         2 * (1 - t) * t * cp.x +
-        Math.pow(t, 2) * endPoint.x;
-      const y = Math.pow(1 - t, 2) * startPoint.y +
+        t ** 2 * endPoint.x;
+      const y =
+        (1 - t) ** 2 * startPoint.y +
         2 * (1 - t) * t * cp.y +
-        Math.pow(t, 2) * endPoint.y;
+        t ** 2 * endPoint.y;
       return { x, y };
     } else if (controlPoints.length === 2) {
       // Cubic Bézier curve
       const cp1 = controlPoints[0];
       const cp2 = controlPoints[1];
-      const x = Math.pow(1 - t, 3) * startPoint.x +
-        3 * Math.pow(1 - t, 2) * t * cp1.x +
-        3 * (1 - t) * Math.pow(t, 2) * cp2.x +
-        Math.pow(t, 3) * endPoint.x;
-      const y = Math.pow(1 - t, 3) * startPoint.y +
-        3 * Math.pow(1 - t, 2) * t * cp1.y +
-        3 * (1 - t) * Math.pow(t, 2) * cp2.y +
-        Math.pow(t, 3) * endPoint.y;
+      const x =
+        (1 - t) ** 3 * startPoint.x +
+        3 * (1 - t) ** 2 * t * cp1.x +
+        3 * (1 - t) * t ** 2 * cp2.x +
+        t ** 3 * endPoint.x;
+      const y =
+        (1 - t) ** 3 * startPoint.y +
+        3 * (1 - t) ** 2 * t * cp1.y +
+        3 * (1 - t) * t ** 2 * cp2.y +
+        t ** 3 * endPoint.y;
       return { x, y };
     } else {
       // Multiple control points - use the same logic as generateComplexCurvePath
@@ -319,7 +333,7 @@ export const Chart = ({
         // Fallback to straight line
         return {
           x: startPoint.x + t * (endPoint.x - startPoint.x),
-          y: startPoint.y + t * (endPoint.y - startPoint.y)
+          y: startPoint.y + t * (endPoint.y - startPoint.y),
         };
       }
 
@@ -334,22 +348,26 @@ export const Chart = ({
         const midX = (startPoint.x + cp.x) / 2;
         const midY = (startPoint.y + cp.y) / 2;
 
-        const x = Math.pow(1 - segmentT, 2) * startPoint.x +
+        const x =
+          (1 - segmentT) ** 2 * startPoint.x +
           2 * (1 - segmentT) * segmentT * cp.x +
-          Math.pow(segmentT, 2) * midX;
-        const y = Math.pow(1 - segmentT, 2) * startPoint.y +
+          segmentT ** 2 * midX;
+        const y =
+          (1 - segmentT) ** 2 * startPoint.y +
           2 * (1 - segmentT) * segmentT * cp.y +
-          Math.pow(segmentT, 2) * midY;
+          segmentT ** 2 * midY;
         return { x, y };
       } else if (segmentIndex >= segmentCount) {
         // Last segment: from last control point to end
         const cp = controlPoints[segmentCount - 1];
-        const x = Math.pow(1 - segmentT, 2) * cp.x +
+        const x =
+          (1 - segmentT) ** 2 * cp.x +
           2 * (1 - segmentT) * segmentT * endPoint.x +
-          Math.pow(segmentT, 2) * endPoint.x;
-        const y = Math.pow(1 - segmentT, 2) * cp.y +
+          segmentT ** 2 * endPoint.x;
+        const y =
+          (1 - segmentT) ** 2 * cp.y +
           2 * (1 - segmentT) * segmentT * endPoint.y +
-          Math.pow(segmentT, 2) * endPoint.y;
+          segmentT ** 2 * endPoint.y;
         return { x, y };
       } else {
         // Middle segments: between control points
@@ -358,12 +376,14 @@ export const Chart = ({
         const midX = (cp1.x + cp2.x) / 2;
         const midY = (cp1.y + cp2.y) / 2;
 
-        const x = Math.pow(1 - segmentT, 2) * cp1.x +
+        const x =
+          (1 - segmentT) ** 2 * cp1.x +
           2 * (1 - segmentT) * segmentT * cp2.x +
-          Math.pow(segmentT, 2) * midX;
-        const y = Math.pow(1 - segmentT, 2) * cp1.y +
+          segmentT ** 2 * midX;
+        const y =
+          (1 - segmentT) ** 2 * cp1.y +
           2 * (1 - segmentT) * segmentT * cp2.y +
-          Math.pow(segmentT, 2) * midY;
+          segmentT ** 2 * midY;
         return { x, y };
       }
     }
@@ -378,7 +398,10 @@ export const Chart = ({
     }
   };
 
-  const handleLineMouseMove = (event: React.MouseEvent<SVGElement>, line: Line) => {
+  const handleLineMouseMove = (
+    event: React.MouseEvent<SVGElement>,
+    line: Line,
+  ) => {
     if (!isAddingCurves) return;
 
     const closestPoint = calculateClosestPointOnLine(event, line);
@@ -524,8 +547,7 @@ export const Chart = ({
 
   const calculateLineLength = (startPoint: Point, endPoint: Point) => {
     return Math.sqrt(
-      Math.pow(endPoint.x - startPoint.x, 2) +
-      Math.pow(endPoint.y - startPoint.y, 2),
+      (endPoint.x - startPoint.x) ** 2 + (endPoint.y - startPoint.y) ** 2,
     );
   };
 
@@ -542,18 +564,21 @@ export const Chart = ({
 
     for (let i = 1; i <= samples; i++) {
       const t = i / samples;
-      const currentPoint = getPointOnBezierCurve(t, line.startPoint, line.endPoint, controlPoints);
+      const currentPoint = getPointOnBezierCurve(
+        t,
+        line.startPoint,
+        line.endPoint,
+        controlPoints,
+      );
 
       const segmentLength = Math.sqrt(
-        Math.pow(currentPoint.x - prevPoint.x, 2) +
-        Math.pow(currentPoint.y - prevPoint.y, 2)
+        (currentPoint.x - prevPoint.x) ** 2 +
+          (currentPoint.y - prevPoint.y) ** 2,
       );
 
       totalLength += segmentLength;
       prevPoint = currentPoint;
     }
-
-
 
     return totalLength;
   };
@@ -942,7 +967,9 @@ export const Chart = ({
                 <path
                   d={generateComplexCurvePath(line, controlPoints, padding)}
                   fill="none"
-                  stroke={isHovered ? "rgba(255, 255, 255, 0.3)" : "transparent"}
+                  stroke={
+                    isHovered ? "rgba(255, 255, 255, 0.3)" : "transparent"
+                  }
                   strokeWidth={isHovered ? "25" : "20"}
                   strokeLinecap="round"
                   onClick={(e) => handleLineClick(e, line)}
@@ -957,7 +984,9 @@ export const Chart = ({
                   tabIndex={isAddingCurves || isDeletingLines ? 0 : -1}
                   style={{
                     cursor:
-                      isAddingCurves || isDeletingLines ? "crosshair" : "default",
+                      isAddingCurves || isDeletingLines
+                        ? "crosshair"
+                        : "default",
                   }}
                 />
               ) : (
@@ -967,7 +996,9 @@ export const Chart = ({
                   y1={line.startPoint.y + padding}
                   x2={line.endPoint.x + padding}
                   y2={line.endPoint.y + padding}
-                  stroke={isHovered ? "rgba(255, 255, 255, 0.3)" : "transparent"}
+                  stroke={
+                    isHovered ? "rgba(255, 255, 255, 0.3)" : "transparent"
+                  }
                   strokeWidth={isHovered ? "25" : "20"}
                   strokeLinecap="round"
                   onClick={(e) => handleLineClick(e, line)}
@@ -982,104 +1013,113 @@ export const Chart = ({
                   tabIndex={isAddingCurves || isDeletingLines ? 0 : -1}
                   style={{
                     cursor:
-                      isAddingCurves || isDeletingLines ? "crosshair" : "default",
+                      isAddingCurves || isDeletingLines
+                        ? "crosshair"
+                        : "default",
                   }}
                 />
               )}
 
               {/* Show either straight line or curved path */}
-              {hasControlPoints ? (
-                /* Complex curved path with multiple control points */
-                (() => {
-                  const styleProps = getLineStyleProperties(line.style);
+              {hasControlPoints
+                ? /* Complex curved path with multiple control points */
+                  (() => {
+                    const styleProps = getLineStyleProperties(line.style);
 
-
-
-                  // Usar função helper para garantir strokeDasharray correto
-                  const strokeDashArrayValue = getStrokeDasharrayForCurve(line.style);
-
-                  // Criar path com propriedades específicas baseado no estilo
-                  const pathProps = {
-                    d: generateComplexCurvePath(line, controlPoints, padding),
-                    fill: "none",
-                    stroke: line.color,
-                    strokeWidth: isHovered ? "5" : styleProps.strokeWidth,
-                    strokeLinecap: "round" as const,
-                    style: {
-                      filter: isHovered
-                        ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
-                        : "none",
-                    },
-                  };
-
-                  const key = `curved-${line.id}-${controlPoints.length}-${line.style}`;
-
-                  // Aplicar strokeDasharray baseado no estilo
-                  if (strokeDashArrayValue) {
-                    return (
-                      <motion.path
-                        key={key}
-                        {...pathProps}
-                        strokeDasharray={strokeDashArrayValue}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.8, delay: 0.3 }}
-                      />
+                    // Usar função helper para garantir strokeDasharray correto
+                    const strokeDashArrayValue = getStrokeDasharrayForCurve(
+                      line.style,
                     );
-                  } else {
-                    // Para linhas sólidas, usar pathLength para animação
-                    return (
-                      <motion.path
-                        key={key}
-                        {...pathProps}
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 2, ease: "easeInOut", delay: 0.3 }}
-                      />
-                    );
-                  }
-                })()
-              ) : (
-                /* Straight line with drawing animation from A to B */
-                (() => {
-                  const lineLength = calculateLineLength(
-                    line.startPoint,
-                    line.endPoint,
-                  );
 
-
-
-                  return (
-                    <motion.path
-                      key={`straight-${line.id}-${line.startPoint.x}-${line.startPoint.y}-${line.endPoint.x}-${line.endPoint.y}`}
-                      d={`M ${line.startPoint.x + padding} ${line.startPoint.y + padding} L ${line.endPoint.x + padding} ${line.endPoint.y + padding}`}
-                      fill="none"
-                      stroke={line.color}
-                      strokeWidth={isHovered ? "5" : getLineStyleProperties(line.style).strokeWidth}
-                      strokeLinecap="round"
-                      strokeDasharray={getLineStyleProperties(line.style).strokeDasharray}
-                      initial={{
-                        strokeDasharray: `${lineLength} ${lineLength}`,
-                        strokeDashoffset: lineLength,
-                      }}
-                      animate={{
-                        strokeDasharray: getLineStyleProperties(line.style).strokeDasharray,
-                        strokeDashoffset: 0,
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        ease: "easeInOut",
-                        delay: 0.2,
-                      }}
-                      style={{
+                    // Criar path com propriedades específicas baseado no estilo
+                    const pathProps = {
+                      d: generateComplexCurvePath(line, controlPoints, padding),
+                      fill: "none",
+                      stroke: line.color,
+                      strokeWidth: isHovered ? "5" : styleProps.strokeWidth,
+                      strokeLinecap: "round" as const,
+                      style: {
                         filter: isHovered
                           ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
                           : "none",
-                      }}
-                    />
-                  );
-                })()
-              )}
+                      },
+                    };
+
+                    const key = `curved-${line.id}-${controlPoints.length}-${line.style}`;
+
+                    // Aplicar strokeDasharray baseado no estilo
+                    if (strokeDashArrayValue) {
+                      return (
+                        <motion.path
+                          key={key}
+                          {...pathProps}
+                          strokeDasharray={strokeDashArrayValue}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.8, delay: 0.3 }}
+                        />
+                      );
+                    } else {
+                      // Para linhas sólidas, usar pathLength para animação
+                      return (
+                        <motion.path
+                          key={key}
+                          {...pathProps}
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{
+                            duration: 2,
+                            ease: "easeInOut",
+                            delay: 0.3,
+                          }}
+                        />
+                      );
+                    }
+                  })()
+                : /* Straight line with drawing animation from A to B */
+                  (() => {
+                    const lineLength = calculateLineLength(
+                      line.startPoint,
+                      line.endPoint,
+                    );
+
+                    return (
+                      <motion.path
+                        key={`straight-${line.id}-${line.startPoint.x}-${line.startPoint.y}-${line.endPoint.x}-${line.endPoint.y}`}
+                        d={`M ${line.startPoint.x + padding} ${line.startPoint.y + padding} L ${line.endPoint.x + padding} ${line.endPoint.y + padding}`}
+                        fill="none"
+                        stroke={line.color}
+                        strokeWidth={
+                          isHovered
+                            ? "5"
+                            : getLineStyleProperties(line.style).strokeWidth
+                        }
+                        strokeLinecap="round"
+                        strokeDasharray={
+                          getLineStyleProperties(line.style).strokeDasharray
+                        }
+                        initial={{
+                          strokeDasharray: `${lineLength} ${lineLength}`,
+                          strokeDashoffset: lineLength,
+                        }}
+                        animate={{
+                          strokeDasharray: getLineStyleProperties(line.style)
+                            .strokeDasharray,
+                          strokeDashoffset: 0,
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          ease: "easeInOut",
+                          delay: 0.2,
+                        }}
+                        style={{
+                          filter: isHovered
+                            ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
+                            : "none",
+                        }}
+                      />
+                    );
+                  })()}
             </g>
           );
         })}
@@ -1139,8 +1179,11 @@ export const Chart = ({
                     cy={point.y + padding}
                     r={isControlPoint ? "6" : "8"}
                     fill={
-                      point.style === "hollow" ? "#ffffff" :
-                        point.style === "border" ? point.color : point.color
+                      point.style === "hollow"
+                        ? "#ffffff"
+                        : point.style === "border"
+                          ? point.color
+                          : point.color
                     }
                     stroke={getPointStroke(point, isControlPoint)}
                     strokeWidth={getPointStrokeWidth(point, isControlPoint)}
@@ -1236,8 +1279,8 @@ export const Chart = ({
             <EditableText
               text={text}
               isEditing={editingTextId === text.id}
-              onEditEnd={() => { }} // Not used anymore
-              onCancel={() => { }} // Not used anymore
+              onEditEnd={() => {}} // Not used anymore
+              onCancel={() => {}} // Not used anymore
             />
             {/* Invisible overlay for interaction handling */}
             <rect

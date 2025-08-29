@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import type { ChartData, LineStyle } from "@/types/chart";
+import { AnimatePresence, motion } from "framer-motion";
 import { CodeBlock } from "@/components/ui/code-block";
+import type { ChartData, LineStyle } from "@/types/chart";
 import type { AxesMode } from "./Toolbar";
 
 interface CodeDrawerProps {
@@ -315,8 +315,9 @@ const Chart = () => {
       role="img"
       aria-label="Chart with points and lines"
     >
-      ${showGrid
-        ? `{/* Grid background */}
+      ${
+        showGrid
+          ? `{/* Grid background */}
       <defs>
         <pattern 
           id="grid" 
@@ -333,7 +334,7 @@ const Chart = () => {
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#grid)" />`
-        : ""
+          : ""
       }
       
       {/* Lines */}

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import type { PointStyle } from "@/types/chart";
-import { DraggableMenu } from "@/components/ui/DraggableMenu";
+import { useEffect, useState } from "react";
 import { MdVisibilityOff } from "react-icons/md";
+import { DraggableMenu } from "@/components/ui/DraggableMenu";
+import type { PointStyle } from "@/types/chart";
 
 interface PointStyleMenuProps {
   isOpen: boolean;
@@ -23,24 +23,28 @@ const styleOptions: Array<{
   label: string;
   preview: string | React.ReactNode;
 }> = [
-    { value: "default", label: "Padrão", preview: "●" },
-    { value: "border", label: "Borda", preview: "◉" },
-    { value: "hollow", label: "Vazio", preview: "○" },
-    { value: "glow", label: "Glow", preview: "✨" },
-    {
-      value: "radar",
-      label: "Radar",
-      preview: (
-        <div className="relative w-5 h-5">
-          <div className="absolute inset-0 rounded-full border-2 border-current opacity-60"></div>
-          <div className="absolute inset-1 rounded-full border border-current opacity-40"></div>
-          <div className="absolute inset-2 rounded-full border border-current opacity-20"></div>
-          <div className="absolute inset-3 rounded-full bg-current"></div>
-        </div>
-      )
-    },
-    { value: "hidden", label: "Oculto", preview: <MdVisibilityOff className="text-lg" /> },
-  ];
+  { value: "default", label: "Padrão", preview: "●" },
+  { value: "border", label: "Borda", preview: "◉" },
+  { value: "hollow", label: "Vazio", preview: "○" },
+  { value: "glow", label: "Glow", preview: "✨" },
+  {
+    value: "radar",
+    label: "Radar",
+    preview: (
+      <div className="relative w-5 h-5">
+        <div className="absolute inset-0 rounded-full border-2 border-current opacity-60"></div>
+        <div className="absolute inset-1 rounded-full border border-current opacity-40"></div>
+        <div className="absolute inset-2 rounded-full border border-current opacity-20"></div>
+        <div className="absolute inset-3 rounded-full bg-current"></div>
+      </div>
+    ),
+  },
+  {
+    value: "hidden",
+    label: "Oculto",
+    preview: <MdVisibilityOff className="text-lg" />,
+  },
+];
 
 export const PointStyleMenu = ({
   isOpen,
@@ -83,7 +87,9 @@ export const PointStyleMenu = ({
       <div className="space-y-3">
         {/* Label editing section */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Nome do Ponto</label>
+          <label className="text-sm font-medium text-gray-300">
+            Nome do Ponto
+          </label>
           <div className="flex gap-2">
             <input
               type="text"
@@ -106,7 +112,9 @@ export const PointStyleMenu = ({
 
         {/* Style options section */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Estilo do Ponto</label>
+          <label className="text-sm font-medium text-gray-300">
+            Estilo do Ponto
+          </label>
           <div className="space-y-1">
             {styleOptions.map((option) => (
               <button
@@ -114,10 +122,11 @@ export const PointStyleMenu = ({
                 onClick={() => onStyleChange(option.value)}
                 onMouseEnter={() => onPreviewStyle(option.value)}
                 onMouseLeave={() => onPreviewStyle(currentStyle)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${currentStyle === option.value
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-300 hover:bg-gray-700"
-                  }`}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
+                  currentStyle === option.value
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
               >
                 <span className="text-lg flex items-center justify-center w-5 h-5">
                   {option.preview}
