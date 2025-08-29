@@ -44,15 +44,6 @@ export const useCanvasInteraction = ({
 
   // Effect to handle menu opening after drag ends
   useEffect(() => {
-    console.log("🔍 useEffect triggered:", {
-      lastClickedItem: lastClickedItem?.item.id,
-      isDraggingExternal,
-      isDraggingItem,
-      draggedItemId,
-      shouldProcess: !isDraggingExternal && !isDraggingItem && lastClickedItem,
-      itemWasDragged: draggedItemId === lastClickedItem?.item.id,
-    });
-
     // Only process if we have a clicked item and no dragging is happening
     if (!isDraggingExternal && !isDraggingItem && lastClickedItem) {
       // Don't open menu if this item was just dragged
@@ -60,11 +51,6 @@ export const useCanvasInteraction = ({
         const canOpen = shouldOpenMenu ? shouldOpenMenu() : true;
 
         if (canOpen) {
-          console.log(
-            "✅ Opening menu:",
-            lastClickedItem.item.type,
-            lastClickedItem.item.id,
-          );
           onItemClick?.(lastClickedItem);
         } else {
           console.log("❌ Menu blocked by shouldOpenMenu");
@@ -86,11 +72,9 @@ export const useCanvasInteraction = ({
     (item: CanvasItem, event: React.MouseEvent) => {
       // Don't process click if this item was just being dragged
       if (draggedItemId === item.id) {
-        console.log("🚫 Ignoring click - item was dragged");
         return true;
       }
 
-      console.log("🖱️ Click detected:", item.type, item.id);
       event.stopPropagation();
 
       setIsItemSelected(true);
@@ -120,7 +104,6 @@ export const useCanvasInteraction = ({
       startY: number,
       event: React.MouseEvent,
     ) => {
-      console.log("🎯 Mouse down:", item.type, item.id);
       event.stopPropagation();
 
       setIsItemSelected(true);
@@ -148,14 +131,13 @@ export const useCanvasInteraction = ({
       const handleGlobalMouseMove = (e: MouseEvent) => {
         const distance = Math.sqrt(
           Math.pow(e.clientX - startPos.x, 2) +
-            Math.pow(e.clientY - startPos.y, 2),
+          Math.pow(e.clientY - startPos.y, 2),
         );
 
         if (distance > dragThreshold && !hasMoved) {
           hasMoved = true;
           setIsDraggingItem(true);
           setDraggedItemId(item.id); // Only set draggedItemId when actual drag occurs
-          console.log("🚀 Drag detected:", item.type, item.id);
         }
 
         onItemDragMove?.({
@@ -177,15 +159,10 @@ export const useCanvasInteraction = ({
 
         // Reset selection and clear dragged item ID after a delay
         if (hasMoved) {
-          console.log("🏁 Drag ended:", item.type, item.id);
           setTimeout(() => {
             setIsItemSelected(false);
             setDraggedItemId(null); // Clear after delay to prevent menu opening
           }, 150);
-        } else {
-          console.log("👆 Click ended:", item.type, item.id);
-          // For clicks, don't clear draggedItemId since it was never set
-          // This allows the click to be processed normally
         }
 
         document.removeEventListener("mousemove", handleGlobalMouseMove);
@@ -204,20 +181,6 @@ export const useCanvasInteraction = ({
   // Handle canvas click (for tool activation)
   const handleCanvasClick = useCallback(
     (x: number, y: number, event: React.MouseEvent) => {
-      console.log("🎨 handleCanvasClick:", {
-        x,
-        y,
-        isItemSelected,
-        isDraggingItem,
-        draggedItemId,
-        recentItemInteraction,
-        shouldBlock:
-          isItemSelected ||
-          isDraggingItem ||
-          draggedItemId !== null ||
-          recentItemInteraction,
-      });
-
       // Allow delete tool to activate even when interacting with objects
       // Other tools should be blocked when interacting with objects
       const shouldBlock =
@@ -228,7 +191,6 @@ export const useCanvasInteraction = ({
           recentItemInteraction);
 
       if (!shouldBlock) {
-        console.log("🎨 Tool activated at:", x, y);
         onToolActivation?.(x, y, event);
       } else {
         console.log("❌ Tool blocked - item interaction in progress");

@@ -135,12 +135,8 @@ export function TextStyleMenu({
           value={localContent}
           onChange={(e) => {
             const newContent = e.target.value;
-            console.log("🔧 Content changed:", newContent);
             setLocalContent(newContent);
             onUpdateText(text.id, { content: newContent });
-          }}
-          onKeyDown={(e) => {
-            console.log("🔧 Key pressed:", e.key);
           }}
           className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
           placeholder="Digite o conteúdo do texto..."

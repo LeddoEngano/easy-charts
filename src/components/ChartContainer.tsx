@@ -76,21 +76,16 @@ export const ChartContainer = () => {
   // Keyboard event listener for undo/redo
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      console.log('Key pressed:', event.key, 'Ctrl:', event.ctrlKey, 'Meta:', event.metaKey, 'Shift:', event.shiftKey);
-
       // Check if Ctrl+Z (Windows/Linux) or Cmd+Z (Mac) is pressed
       if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
-        console.log('Undo/Redo key combination detected');
         event.preventDefault();
 
         // Check if Shift is also pressed for redo (Ctrl+Shift+Z or Cmd+Shift+Z)
         if (event.shiftKey) {
-          console.log('Redo attempt - canRedo:', canRedo);
           if (canRedo) {
             redo();
           }
         } else {
-          console.log('Undo attempt - canUndo:', canUndo);
           if (canUndo) {
             undo();
           }
@@ -99,7 +94,6 @@ export const ChartContainer = () => {
 
       // Also support Ctrl+Y for redo (Windows/Linux)
       if ((event.ctrlKey || event.metaKey) && event.key === 'y') {
-        console.log('Ctrl+Y detected - canRedo:', canRedo);
         event.preventDefault();
         if (canRedo) {
           redo();
@@ -119,11 +113,9 @@ export const ChartContainer = () => {
       // Handle delete mode first
       if (isDeletingLines) {
         if (interaction.item.type === "point") {
-          console.log("🗑️ Deleting point:", interaction.item.id);
           removePoint(interaction.item.id);
           return;
         } else if (interaction.item.type === "text") {
-          console.log("🗑️ Deleting text:", interaction.item.id);
           removeText(interaction.item.id);
           return;
         }
@@ -146,7 +138,6 @@ export const ChartContainer = () => {
 
         // Start inline editing
         const text = interaction.item.data;
-        console.log("🔧 Setting editingText:", text);
         setEditingText({
           id: text.id,
           content: text.content,
@@ -234,29 +225,22 @@ export const ChartContainer = () => {
   };
 
   const handleChartClick = (x: number, y: number, event?: React.MouseEvent) => {
-    console.log("🔧 handleChartClick called:", { x, y, isAddingText, isAddingPoints, isDeletingLines });
 
     // Allow delete tool to activate even when interacting with objects
     // Other tools should be blocked when interacting with objects
     if (canvasInteraction.shouldPreventToolActivation && !isDeletingLines) {
-      console.log("🔧 Tool activation prevented by canvasInteraction");
       return;
     }
 
     if (isAddingPoints) {
-      console.log("🔧 Adding point");
       addPointByClick(x, y);
     } else if (isAddingText && event) {
-      console.log("🔧 Adding text at coordinates:", { x, y });
       // Get the SVG element position to calculate correct screen coordinates
       const svgElement = event.currentTarget;
       const containerRect = svgElement.getBoundingClientRect();
-      console.log("🔧 SVG container rect:", containerRect);
 
       // Add new text directly
       addText(x, y, "Novo texto");
-    } else {
-      console.log("🔧 No action taken - conditions not met");
     }
   };
 
@@ -348,14 +332,9 @@ export const ChartContainer = () => {
   };
 
   const handleTextEditEnd = (finalContent: string) => {
-    console.log("🔧 handleTextEditEnd called with:", finalContent);
-    console.log("🔧 editingText:", editingText);
 
     if (editingText && finalContent.trim()) {
-      console.log("🔧 Updating text content for ID:", editingText.id);
       updateTextContent(editingText.id, finalContent);
-    } else {
-      console.log("🔧 No update needed - empty content or no editingText");
     }
     setEditingText(null);
   };
