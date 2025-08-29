@@ -130,8 +130,8 @@ export const LineStyleMenu = ({
                         <input
                             type="color"
                             value={currentColor}
-                            onChange={(e) => onColorChange(e.target.value)}
-                            onMouseEnter={(e) => onPreviewColor(e.target.value)}
+                            onChange={(e) => onColorChange((e.target as HTMLInputElement).value)}
+                            onMouseEnter={(e) => onPreviewColor((e.target as HTMLInputElement).value)}
                             onMouseLeave={() => onPreviewColor(currentColor)}
                             className="w-8 h-8 rounded border-2 border-gray-600 cursor-pointer bg-transparent"
                             title="Escolher cor"
@@ -139,10 +139,10 @@ export const LineStyleMenu = ({
                         <input
                             type="text"
                             value={colorInput}
-                            onChange={(e) => handleColorChange(e.target.value)}
+                            onChange={(e) => handleColorChange((e.target as HTMLInputElement).value)}
                             onMouseEnter={(e) => {
-                                if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-                                    onPreviewColor(e.target.value);
+                                if (/^#[0-9A-Fa-f]{6}$/.test((e.target as HTMLInputElement).value)) {
+                                    onPreviewColor((e.target as HTMLInputElement).value);
                                 }
                             }}
                             onMouseLeave={() => onPreviewColor(currentColor)}
