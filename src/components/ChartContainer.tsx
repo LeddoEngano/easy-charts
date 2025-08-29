@@ -63,6 +63,8 @@ export const ChartContainer = () => {
     openPointStyleMenu,
     closePointStyleMenu,
     updatePointStyle,
+    updatePointLabel,
+    previewPointStyle,
     setAxesModeHandler,
     toggleGrid,
     undo,
@@ -772,8 +774,19 @@ export const ChartContainer = () => {
             chartData.points.find((p) => p.id === pointStyleMenu.pointId)
               ?.style || "default"
           }
+          currentLabel={
+            chartData.points.find((p) => p.id === pointStyleMenu.pointId)
+              ?.label
+          }
+          pointId={pointStyleMenu.pointId}
           onStyleChange={(style) =>
             updatePointStyle(pointStyleMenu.pointId, style)
+          }
+          onLabelChange={(label) =>
+            updatePointLabel(pointStyleMenu.pointId, label)
+          }
+          onPreviewStyle={(style) =>
+            previewPointStyle(pointStyleMenu.pointId, style)
           }
           onClose={closePointStyleMenu}
         />

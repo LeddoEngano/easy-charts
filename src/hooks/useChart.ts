@@ -692,6 +692,26 @@ export const useChart = () => {
     setActuallyDragged(false); // Reset drag state after menu interaction
   }, []);
 
+  // Update point label
+  const updatePointLabel = useCallback((pointId: string, label?: string) => {
+    setChartData((prev) => ({
+      ...prev,
+      points: prev.points.map((point) =>
+        point.id === pointId ? { ...point, label } : point,
+      ),
+    }));
+  }, []);
+
+  // Preview point style temporarily
+  const previewPointStyle = useCallback((pointId: string, style: PointStyle) => {
+    setChartData((prev) => ({
+      ...prev,
+      points: prev.points.map((point) =>
+        point.id === pointId ? { ...point, style } : point,
+      ),
+    }));
+  }, []);
+
   // Check if should open menu (simple logic)
   const shouldOpenMenu = useCallback(() => {
     const canOpen = !isDragging && !actuallyDragged;
@@ -803,6 +823,8 @@ export const useChart = () => {
     openPointStyleMenu,
     closePointStyleMenu,
     updatePointStyle,
+    updatePointLabel,
+    previewPointStyle,
     saveChartData,
     loadChartData,
     setAxesModeHandler,

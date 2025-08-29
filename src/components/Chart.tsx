@@ -450,19 +450,19 @@ export const Chart = ({
   // Helper functions for point styles
   const getPointStroke = (point: Point, isControlPoint: boolean) => {
     if (point.style === "hollow") return point.color;
-    if (point.style === "border") return point.color;
+    if (point.style === "border") return "#ffffff"; // White border for border style
     return isControlPoint ? "#6d28d9" : point.color;
   };
 
   const getPointStrokeWidth = (point: Point, isControlPoint: boolean) => {
-    if (point.style === "border") return "4";
-    if (point.style === "hollow") return "2";
-    return "2";
+    if (point.style === "border") return "3";
+    if (point.style === "hollow") return "3";
+    return "0"; // No stroke for default style
   };
 
   const getPointFilter = (point: Point) => {
     if (point.style === "glow") {
-      return `drop-shadow(0 0 8px ${point.color}) drop-shadow(0 0 4px ${point.color})`;
+      return `drop-shadow(0 0 12px ${point.color}) drop-shadow(0 0 8px ${point.color}) drop-shadow(0 0 4px ${point.color})`;
     }
     return "none";
   };
@@ -1021,7 +1021,8 @@ export const Chart = ({
                     cy={point.y + padding}
                     r={isControlPoint ? "6" : "8"}
                     fill={
-                      point.style === "hollow" ? "transparent" : point.color
+                      point.style === "hollow" ? "#ffffff" :
+                        point.style === "border" ? point.color : point.color
                     }
                     stroke={getPointStroke(point, isControlPoint)}
                     strokeWidth={getPointStrokeWidth(point, isControlPoint)}
@@ -1046,6 +1047,19 @@ export const Chart = ({
                       filter: getPointFilter(point),
                     }}
                   />
+
+                  {/* Additional border for border style to make it more visible */}
+                  {point.style === "border" && (
+                    <circle
+                      cx={point.x + padding}
+                      cy={point.y + padding}
+                      r={isControlPoint ? "6" : "8"}
+                      fill="transparent"
+                      stroke="#ffffff"
+                      strokeWidth="2"
+                      style={{ pointerEvents: "none" }}
+                    />
+                  )}
 
                   {/* Additional circles for radar effect - rendered first so they don't interfere with interaction */}
                   {point.style === "radar" && (

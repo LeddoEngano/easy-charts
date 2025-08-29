@@ -1,62 +1,132 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import type { PointStyle } from "@/types/chart";
 import { DraggableMenu } from "@/components/ui/DraggableMenu";
+import { MdVisibilityOff } from "react-icons/md";
 
 interface PointStyleMenuProps {
   isOpen: boolean;
   x: number;
   y: number;
   currentStyle: PointStyle;
+  currentLabel?: string;
+  pointId: string;
   onStyleChange: (style: PointStyle) => void;
+  onLabelChange: (label?: string) => void;
+  onPreviewStyle: (style: PointStyle) => void;
   onClose: () => void;
 }
 
 const styleOptions: Array<{
   value: PointStyle;
   label: string;
-  preview: string;
+  preview: string | React.ReactNode;
 }> = [
-  { value: "default", label: "Padrão", preview: "●" },
-  { value: "border", label: "Borda", preview: "◉" },
-  { value: "hollow", label: "Vazio", preview: "○" },
-  { value: "glow", label: "Glow", preview: "✨" },
-  { value: "radar", label: "Radar", preview: "⊚" },
-  { value: "hidden", label: "Oculto", preview: "👁️" },
-];
+    { value: "default", label: "Padrão", preview: "●" },
+    { value: "border", label: "Borda", preview: "◉" },
+    { value: "hollow", label: "Vazio", preview: "○" },
+    { value: "glow", label: "Glow", preview: "✨" },
+    {
+      value: "radar",
+      label: "Radar",
+      preview: (
+        <div className="relative w-5 h-5">
+          <div className="absolute inset-0 rounded-full border-2 border-current opacity-60"></div>
+          <div className="absolute inset-1 rounded-full border border-current opacity-40"></div>
+          <div className="absolute inset-2 rounded-full border border-current opacity-20"></div>
+          <div className="absolute inset-3 rounded-full bg-current"></div>
+        </div>
+      )
+    },
+    { value: "hidden", label: "Oculto", preview: <MdVisibilityOff className="text-lg" /> },
+  ];
 
 export const PointStyleMenu = ({
   isOpen,
   x,
   y,
   currentStyle,
+  currentLabel,
+  pointId,
   onStyleChange,
+  onLabelChange,
+  onPreviewStyle,
   onClose,
 }: PointStyleMenuProps) => {
+  const [labelInput, setLabelInput] = useState(currentLabel || "");
+
+  // Update local state when currentLabel changes
+  useEffect(() => {
+    setLabelInput(currentLabel || "");
+  }, [currentLabel]);
+
+  const handleLabelChange = (newLabel: string) => {
+    setLabelInput(newLabel);
+    onLabelChange(newLabel.trim() || undefined);
+  };
+
+  const handleRemoveLabel = () => {
+    setLabelInput("");
+    onLabelChange(undefined);
+  };
+
   if (!isOpen) return null;
 
   return (
     <DraggableMenu
-      title="Estilo do Ponto"
+      title="Configurações do Ponto"
       x={x + 10}
       y={y - 100}
       onClose={onClose}
     >
-      <div className="space-y-1">
-        {styleOptions.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => onStyleChange(option.value)}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
-              currentStyle === option.value
-                ? "bg-blue-600 text-white"
-                : "text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <span className="text-lg">{option.preview}</span>
-            <span>{option.label}</span>
-          </button>
-        ))}
+      <div className="space-y-3">
+        {/* Label editing section */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Nome do Ponto</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={labelInput}
+              onChange={(e) => handleLabelChange(e.target.value)}
+              placeholder="Digite o nome..."
+              className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {currentLabel && (
+              <button
+                onClick={handleRemoveLabel}
+                className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
+                title="Remover nome"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Style options section */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-300">Estilo do Ponto</label>
+          <div className="space-y-1">
+            {styleOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => onStyleChange(option.value)}
+                onMouseEnter={() => onPreviewStyle(option.value)}
+                onMouseLeave={() => onPreviewStyle(currentStyle)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${currentStyle === option.value
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+                  }`}
+              >
+                <span className="text-lg flex items-center justify-center w-5 h-5">
+                  {option.preview}
+                </span>
+                <span>{option.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </DraggableMenu>
   );
