@@ -6,6 +6,14 @@ export type PointStyle =
   | "radar"
   | "hidden";
 
+export type LineStyle =
+  | "solid"
+  | "dashed"
+  | "dotted"
+  | "dash-dot"
+  | "thick"
+  | "thin";
+
 export interface Point {
   id: string;
   x: number;
@@ -23,6 +31,7 @@ export interface Line {
   endPoint: Point;
   controlPointIds: string[]; // Multiple control points for complex curves
   color: string; // Color of the line
+  style: LineStyle; // Style of the line
 }
 
 export interface Text {

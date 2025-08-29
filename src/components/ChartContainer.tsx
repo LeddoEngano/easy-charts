@@ -56,6 +56,7 @@ export const ChartContainer = () => {
     clearChart,
     restartAnimations,
     changeLineColor,
+    changeLineStyle,
     startNewLine,
     setHoveredLine,
     updateControlPointPreview,
@@ -65,6 +66,8 @@ export const ChartContainer = () => {
     updatePointStyle,
     updatePointLabel,
     previewPointStyle,
+    previewLineStyle,
+    previewLineColor,
     setAxesModeHandler,
     toggleGrid,
     undo,
@@ -510,8 +513,8 @@ export const ChartContainer = () => {
     tooltipClassElements.forEach((el) => el.remove());
 
     // Remove any text elements that might be tooltips (usually small text)
-    const textElements = cleanSVG.querySelectorAll("text");
-    textElements.forEach((text) => {
+    const tooltipTextElements = cleanSVG.querySelectorAll("text");
+    tooltipTextElements.forEach((text) => {
       const textContent = text.textContent?.toLowerCase() || "";
       if (
         textContent.includes("tooltip") ||
@@ -526,15 +529,39 @@ export const ChartContainer = () => {
     // This function now focuses on cleaning up interactive elements
 
     // Remove control points (they should not appear in final output)
-    const controlPointGroups = cleanSVG.querySelectorAll('g[key*="control-"]');
-    controlPointGroups.forEach((el) => el.remove());
-
-    // Also remove any circles that might be control points based on position/size
+    // Control points are rendered in groups with motion.g elements
     const allGroups = cleanSVG.querySelectorAll("g");
     allGroups.forEach((group) => {
-      const key = group.getAttribute("key");
-      if (key && key.includes("control-")) {
-        group.remove();
+      // Check if this group contains a control point circle
+      const circles = group.querySelectorAll("circle");
+      circles.forEach((circle) => {
+        // Control points have radius 6, regular points have radius 8
+        const radius = circle.getAttribute("r");
+        if (radius === "6") {
+          // This is likely a control point, remove the entire group
+          group.remove();
+        }
+      });
+    });
+
+    // Also remove any text labels that might be for control points
+    const controlPointTextElements = cleanSVG.querySelectorAll("text");
+    controlPointTextElements.forEach((text) => {
+      const fontSize = text.getAttribute("font-size");
+      const fill = text.getAttribute("fill");
+      // Control point labels have fontSize 10 and purple color (#6d28d9)
+      if (fontSize === "10" || fill === "#6d28d9") {
+        text.remove();
+      }
+    });
+
+    // Remove control point preview circles (they have stroke color #8b5cf6)
+    const previewCircles = cleanSVG.querySelectorAll("circle");
+    previewCircles.forEach((circle) => {
+      const stroke = circle.getAttribute("stroke");
+      if (stroke === "#8b5cf6") {
+        // This is a control point preview, remove it
+        circle.remove();
       }
     });
 
@@ -650,8 +677,11 @@ export const ChartContainer = () => {
           onToggleDeletingLines={toggleDeletingLines}
           onClearChart={clearChart}
           onLineColorChange={changeLineColor}
+          onLineStyleChange={changeLineStyle}
           onStartNewLine={startNewLine}
           onLineHover={setHoveredLine}
+          onLinePreviewStyle={previewLineStyle}
+          onLinePreviewColor={previewLineColor}
           isAddingPoints={isAddingPoints}
           isAddingCurves={isAddingCurves}
           isAddingText={isAddingText}
@@ -659,6 +689,7 @@ export const ChartContainer = () => {
           lines={chartData.lines.map((line) => ({
             id: line.id,
             color: line.color,
+            style: line.style,
           }))}
           texts={chartData.texts || []}
           onTextClick={(text) => {

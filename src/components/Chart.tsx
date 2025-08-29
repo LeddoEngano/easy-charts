@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import type { Line, Point, Text } from "@/types/chart";
+import type { Line, Point, Text, LineStyle } from "@/types/chart";
 import type { AxesMode } from "./Toolbar";
 import { EditableText } from "./EditableText";
 
@@ -98,6 +98,47 @@ export const Chart = ({
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   const padding = 40;
+
+  // Function to get line style properties based on LineStyle
+  const getLineStyleProperties = (style: LineStyle) => {
+    switch (style) {
+      case "solid":
+        return {
+          strokeDasharray: undefined,
+          strokeWidth: "3",
+        };
+      case "dashed":
+        return {
+          strokeDasharray: "10,5",
+          strokeWidth: "3",
+        };
+      case "dotted":
+        return {
+          strokeDasharray: "3,5",
+          strokeWidth: "3",
+        };
+      case "dash-dot":
+        return {
+          strokeDasharray: "10,5,3,5",
+          strokeWidth: "3",
+        };
+      case "thick":
+        return {
+          strokeDasharray: undefined,
+          strokeWidth: "6",
+        };
+      case "thin":
+        return {
+          strokeDasharray: undefined,
+          strokeWidth: "1",
+        };
+      default:
+        return {
+          strokeDasharray: undefined,
+          strokeWidth: "3",
+        };
+    }
+  };
 
   // Close download menu when clicking outside
   useEffect(() => {
@@ -911,8 +952,9 @@ export const Chart = ({
                   d={generateComplexCurvePath(line, controlPoints, padding)}
                   fill="none"
                   stroke={line.color}
-                  strokeWidth={isHovered ? "5" : "3"}
+                  strokeWidth={isHovered ? "5" : getLineStyleProperties(line.style).strokeWidth}
                   strokeLinecap="round"
+                  strokeDasharray={getLineStyleProperties(line.style).strokeDasharray}
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
                   transition={{
@@ -939,13 +981,15 @@ export const Chart = ({
                       d={`M ${line.startPoint.x + padding} ${line.startPoint.y + padding} L ${line.endPoint.x + padding} ${line.endPoint.y + padding}`}
                       fill="none"
                       stroke={line.color}
-                      strokeWidth={isHovered ? "5" : "3"}
+                      strokeWidth={isHovered ? "5" : getLineStyleProperties(line.style).strokeWidth}
                       strokeLinecap="round"
+                      strokeDasharray={getLineStyleProperties(line.style).strokeDasharray}
                       initial={{
                         strokeDasharray: `${lineLength} ${lineLength}`,
                         strokeDashoffset: lineLength,
                       }}
                       animate={{
+                        strokeDasharray: getLineStyleProperties(line.style).strokeDasharray,
                         strokeDashoffset: 0,
                       }}
                       transition={{

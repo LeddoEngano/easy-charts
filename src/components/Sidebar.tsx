@@ -2,11 +2,12 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import type { Text } from "@/types/chart";
+import type { Text, LineStyle } from "@/types/chart";
 import { TbEaseInOutControlPoints } from "react-icons/tb";
 import { CgAdd } from "react-icons/cg";
 import { RxText } from "react-icons/rx";
 import { MdDeleteOutline } from "react-icons/md";
+import { LineStyleMenu } from "@/components/LineStyleMenu";
 interface SidebarProps {
   onToggleAddingPoints: () => void;
   onToggleAddingCurves: () => void;
@@ -14,13 +15,16 @@ interface SidebarProps {
   onToggleDeletingLines: () => void;
   onClearChart: () => void;
   onLineColorChange: (lineId: string, color: string) => void;
+  onLineStyleChange: (lineId: string, style: LineStyle) => void;
   onStartNewLine: () => void;
   onLineHover: (lineId: string | null) => void;
+  onLinePreviewStyle: (lineId: string | null, style: LineStyle) => void;
+  onLinePreviewColor: (lineId: string | null, color: string) => void;
   isAddingPoints: boolean;
   isAddingCurves: boolean;
   isAddingText: boolean;
   isDeletingLines: boolean;
-  lines: Array<{ id: string; color: string }>;
+  lines: Array<{ id: string; color: string; style: LineStyle }>;
   texts: Text[];
   onTextClick?: (text: Text) => void;
   onTextDelete?: (textId: string) => void;
@@ -33,8 +37,11 @@ export const Sidebar = ({
   onToggleDeletingLines,
   onClearChart,
   onLineColorChange,
+  onLineStyleChange,
   onStartNewLine,
   onLineHover,
+  onLinePreviewStyle,
+  onLinePreviewColor,
   isAddingPoints,
   isAddingCurves,
   isAddingText,
@@ -44,23 +51,11 @@ export const Sidebar = ({
   onTextClick,
   onTextDelete,
 }: SidebarProps) => {
-  const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
+  const [showLineStyleMenu, setShowLineStyleMenu] = useState<string | null>(null);
 
-  // Quick select colors
-  const quickColors = [
-    "#000000", // Black
-    "#ef4444", // Red
-    "#bfff70", // Green
-    "#f59e0b", // Yellow
-    "#8b5cf6", // Purple
-    "#ec4899", // Pink
-    "#3b82f6", // Cyan
-    "#f97316", // Orange
-  ];
-
-  // Close color picker when clicking on backdrop
+  // Close line style menu when clicking on backdrop
   const handleBackdropClick = () => {
-    setShowColorPicker(null);
+    setShowLineStyleMenu(null);
   };
 
   return (
@@ -152,90 +147,34 @@ export const Sidebar = ({
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() =>
-                  setShowColorPicker(
-                    showColorPicker === line.id ? null : line.id,
+                  setShowLineStyleMenu(
+                    showLineStyleMenu === line.id ? null : line.id,
                   )
                 }
                 onMouseEnter={() => onLineHover(line.id)}
                 onMouseLeave={() => onLineHover(null)}
                 className="w-10 h-10 cursor-pointer rounded-lg flex items-center justify-center text-xs font-medium relative"
                 style={{ backgroundColor: line.color }}
-                title={`Linha ${index + 1} - Clique para alterar cor`}
+                title={`Linha ${index + 1} - Clique para configurar`}
               >
                 {index + 1}
               </motion.button>
 
-              {/* Color Picker for this line */}
-              {showColorPicker === line.id && (
-                <>
-                  {/* Backdrop to catch clicks outside */}
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={handleBackdropClick}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") {
-                        handleBackdropClick();
-                      }
-                    }}
-                    role="button"
-                    tabIndex={-1}
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="absolute left-20 top-0 bg-gray-800 rounded-lg p-3 shadow-xl z-50"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex flex-col space-y-3">
-                      <div className="text-xs text-gray-300 font-medium">
-                        Cor da Linha
-                      </div>
-
-                      {/* Quick select colors - 2 rows of 4 */}
-                      <div className="grid grid-cols-4 gap-2">
-                        {quickColors.map((color) => (
-                          <button
-                            type="button"
-                            key={color}
-                            onClick={() => onLineColorChange(line.id, color)}
-                            className={`w-6 h-6 cursor-pointer rounded border-2 hover:scale-110 transition-transform ${line.color === color
-                              ? "border-white"
-                              : "border-gray-600"
-                              }`}
-                            style={{ backgroundColor: color }}
-                            title={`Cor ${color}`}
-                          />
-                        ))}
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="color"
-                          value={line.color}
-                          onChange={(e) =>
-                            onLineColorChange(line.id, e.target.value)
-                          }
-                          className="w-8 h-8 rounded border-2 border-gray-600 cursor-pointer bg-transparent"
-                          title="Escolher cor"
-                        />
-                        <input
-                          type="text"
-                          value={line.color}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
-                              onLineColorChange(line.id, value);
-                            }
-                          }}
-                          className="w-20 h-8 px-2 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
-                          placeholder="#000000"
-                          maxLength={7}
-                          title="Digite o código hexadecimal"
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                </>
+              {/* Line Style Menu for this line */}
+              {showLineStyleMenu === line.id && (
+                <LineStyleMenu
+                  isOpen={true}
+                  x={80}
+                  y={100 + index * 60}
+                  currentColor={line.color}
+                  currentStyle={line.style}
+                  lineId={line.id}
+                  onColorChange={(color) => onLineColorChange(line.id, color)}
+                  onStyleChange={(style) => onLineStyleChange(line.id, style)}
+                  onPreviewStyle={(style) => onLinePreviewStyle(line.id, style)}
+                  onPreviewColor={(color) => onLinePreviewColor(line.id, color)}
+                  onClose={() => setShowLineStyleMenu(null)}
+                />
               )}
             </motion.div>
           ))}
@@ -293,8 +232,8 @@ export const Sidebar = ({
         </motion.div>
       )}
 
-      {/* Color Picker Backdrop */}
-      {showColorPicker && (
+      {/* Line Style Menu Backdrop */}
+      {showLineStyleMenu && (
         <div
           className="fixed inset-0 z-40"
           onClick={handleBackdropClick}

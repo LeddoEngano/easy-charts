@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import type { ChartData } from "@/types/chart";
+import type { ChartData, LineStyle } from "@/types/chart";
 import { CodeBlock } from "@/components/ui/code-block";
 import type { AxesMode } from "./Toolbar";
 
@@ -262,6 +262,47 @@ const generateCurvePath = (
   }
 };
 
+// Function to get line style properties based on LineStyle
+const getLineStyleProperties = (style: LineStyle) => {
+  switch (style) {
+    case "solid":
+      return {
+        strokeDasharray: undefined,
+        strokeWidth: "3",
+      };
+    case "dashed":
+      return {
+        strokeDasharray: "10,5",
+        strokeWidth: "3",
+      };
+    case "dotted":
+      return {
+        strokeDasharray: "3,5",
+        strokeWidth: "3",
+      };
+    case "dash-dot":
+      return {
+        strokeDasharray: "10,5,3,5",
+        strokeWidth: "3",
+      };
+    case "thick":
+      return {
+        strokeDasharray: undefined,
+        strokeWidth: "6",
+      };
+    case "thin":
+      return {
+        strokeDasharray: undefined,
+        strokeWidth: "1",
+      };
+    default:
+      return {
+        strokeDasharray: undefined,
+        strokeWidth: "3",
+      };
+  }
+};
+
 // Chart component
 const Chart = () => {
   const padding = 40;
@@ -274,9 +315,8 @@ const Chart = () => {
       role="img"
       aria-label="Chart with points and lines"
     >
-      ${
-        showGrid
-          ? `{/* Grid background */}
+      ${showGrid
+        ? `{/* Grid background */}
       <defs>
         <pattern 
           id="grid" 
@@ -293,7 +333,7 @@ const Chart = () => {
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#grid)" />`
-          : ""
+        : ""
       }
       
       {/* Lines */}
@@ -313,8 +353,9 @@ const Chart = () => {
                 d={generateCurvePath(startPoint, endPoint, controlPoints, padding)}
                 fill="none"
                 stroke={line.color}
-                strokeWidth="3"
+                strokeWidth={getLineStyleProperties(line.style).strokeWidth}
                 strokeLinecap="round"
+                strokeDasharray={getLineStyleProperties(line.style).strokeDasharray}
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
                 transition={{ duration: 2, ease: "easeInOut" }}
@@ -326,8 +367,9 @@ const Chart = () => {
                 x2={endPoint.x + padding}
                 y2={endPoint.y + padding}
                 stroke={line.color}
-                strokeWidth="3"
+                strokeWidth={getLineStyleProperties(line.style).strokeWidth}
                 strokeLinecap="round"
+                strokeDasharray={getLineStyleProperties(line.style).strokeDasharray}
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
                 transition={{ duration: 1.5, ease: "easeInOut" }}

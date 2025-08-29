@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect, useRef } from "react";
-import type { ChartData, Line, Point, PointStyle, Text } from "@/types/chart";
+import type { ChartData, Line, Point, PointStyle, LineStyle, Text } from "@/types/chart";
 import type { AxesMode } from "@/components/Toolbar";
 
 const STORAGE_KEY = "easy-charts-data";
@@ -258,6 +258,7 @@ export const useChart = () => {
               endPoint: lastPoint,
               controlPointIds: [],
               color: lineColor,
+              style: "solid", // Default style for new lines
             };
 
             // Update the color of both points to match the line
@@ -629,6 +630,60 @@ export const useChart = () => {
     });
   }, []);
 
+  // Change specific line style
+  const changeLineStyle = useCallback((lineId: string, style: LineStyle) => {
+    setChartData((prev) => ({
+      ...prev,
+      lines: prev.lines.map((line) =>
+        line.id === lineId ? { ...line, style } : line,
+      ),
+    }));
+  }, []);
+
+  // Preview line style temporarily
+  const previewLineStyle = useCallback((lineId: string | null, style: LineStyle) => {
+    if (!lineId) return;
+
+    setChartData((prev) => ({
+      ...prev,
+      lines: prev.lines.map((line) =>
+        line.id === lineId ? { ...line, style } : line,
+      ),
+    }));
+  }, []);
+
+  // Preview line color temporarily
+  const previewLineColor = useCallback((lineId: string | null, color: string) => {
+    if (!lineId) return;
+
+    setChartData((prev) => {
+      const targetLine = prev.lines.find((line) => line.id === lineId);
+      if (!targetLine) return prev;
+
+      // Update line color temporarily
+      const updatedLines = prev.lines.map((line) =>
+        line.id === lineId ? { ...line, color } : line,
+      );
+
+      // Update points that belong to this line (start and end points)
+      const updatedPoints = prev.points.map((point) => {
+        if (
+          point.id === targetLine.startPointId ||
+          point.id === targetLine.endPointId
+        ) {
+          return { ...point, color };
+        }
+        return point;
+      });
+
+      return {
+        ...prev,
+        lines: updatedLines,
+        points: updatedPoints,
+      };
+    });
+  }, []);
+
   // Start new line mode
   const startNewLine = useCallback(() => {
     setIsNewLineMode(true);
@@ -816,6 +871,7 @@ export const useChart = () => {
     clearChart,
     restartAnimations,
     changeLineColor,
+    changeLineStyle,
     startNewLine,
     setHoveredLine,
     updateControlPointPreview,
@@ -825,6 +881,8 @@ export const useChart = () => {
     updatePointStyle,
     updatePointLabel,
     previewPointStyle,
+    previewLineStyle,
+    previewLineColor,
     saveChartData,
     loadChartData,
     setAxesModeHandler,
