@@ -140,6 +140,20 @@ export const Chart = ({
     }
   };
 
+  // Helper function to get strokeDasharray value for curves
+  const getStrokeDasharrayForCurve = (style: LineStyle): string | undefined => {
+    switch (style) {
+      case "dashed":
+        return "10,5";
+      case "dotted":
+        return "3,5";
+      case "dash-dot":
+        return "10,5,3,5";
+      default:
+        return undefined;
+    }
+  };
+
   // Close download menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -979,22 +993,51 @@ export const Chart = ({
                 (() => {
                   const styleProps = getLineStyleProperties(line.style);
 
-                  return (
-                    <path
-                      key={`curved-${line.id}-${controlPoints.length}`}
-                      d={generateComplexCurvePath(line, controlPoints, padding)}
-                      fill="none"
-                      stroke={line.color}
-                      strokeWidth={isHovered ? "5" : styleProps.strokeWidth}
-                      strokeLinecap="round"
-                      strokeDasharray={styleProps.strokeDasharray}
-                      style={{
-                        filter: isHovered
-                          ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
-                          : "none",
-                      }}
-                    />
-                  );
+
+
+                  // Usar função helper para garantir strokeDasharray correto
+                  const strokeDashArrayValue = getStrokeDasharrayForCurve(line.style);
+
+                  // Criar path com propriedades específicas baseado no estilo
+                  const pathProps = {
+                    d: generateComplexCurvePath(line, controlPoints, padding),
+                    fill: "none",
+                    stroke: line.color,
+                    strokeWidth: isHovered ? "5" : styleProps.strokeWidth,
+                    strokeLinecap: "round" as const,
+                    style: {
+                      filter: isHovered
+                        ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
+                        : "none",
+                    },
+                  };
+
+                  const key = `curved-${line.id}-${controlPoints.length}-${line.style}`;
+
+                  // Aplicar strokeDasharray baseado no estilo
+                  if (strokeDashArrayValue) {
+                    return (
+                      <motion.path
+                        key={key}
+                        {...pathProps}
+                        strokeDasharray={strokeDashArrayValue}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.8, delay: 0.3 }}
+                      />
+                    );
+                  } else {
+                    // Para linhas sólidas, usar pathLength para animação
+                    return (
+                      <motion.path
+                        key={key}
+                        {...pathProps}
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 2, ease: "easeInOut", delay: 0.3 }}
+                      />
+                    );
+                  }
                 })()
               ) : (
                 /* Straight line with drawing animation from A to B */
@@ -1003,6 +1046,9 @@ export const Chart = ({
                     line.startPoint,
                     line.endPoint,
                   );
+
+
+
                   return (
                     <motion.path
                       key={`straight-${line.id}-${line.startPoint.x}-${line.startPoint.y}-${line.endPoint.x}-${line.endPoint.y}`}
