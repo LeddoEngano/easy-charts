@@ -2,10 +2,15 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-
+import type { Text } from "@/types/chart";
+import { TbEaseInOutControlPoints } from "react-icons/tb";
+import { CgAdd } from "react-icons/cg";
+import { RxText } from "react-icons/rx";
+import { MdDeleteOutline } from "react-icons/md";
 interface SidebarProps {
   onToggleAddingPoints: () => void;
   onToggleAddingCurves: () => void;
+  onToggleAddingText: () => void;
   onToggleDeletingLines: () => void;
   onClearChart: () => void;
   onLineColorChange: (lineId: string, color: string) => void;
@@ -13,13 +18,18 @@ interface SidebarProps {
   onLineHover: (lineId: string | null) => void;
   isAddingPoints: boolean;
   isAddingCurves: boolean;
+  isAddingText: boolean;
   isDeletingLines: boolean;
   lines: Array<{ id: string; color: string }>;
+  texts: Text[];
+  onTextClick?: (text: Text) => void;
+  onTextDelete?: (textId: string) => void;
 }
 
 export const Sidebar = ({
   onToggleAddingPoints,
   onToggleAddingCurves,
+  onToggleAddingText,
   onToggleDeletingLines,
   onClearChart,
   onLineColorChange,
@@ -27,8 +37,12 @@ export const Sidebar = ({
   onLineHover,
   isAddingPoints,
   isAddingCurves,
+  isAddingText,
   isDeletingLines,
   lines,
+  texts,
+  onTextClick,
+  onTextDelete,
 }: SidebarProps) => {
   const [showColorPicker, setShowColorPicker] = useState<string | null>(null);
 
@@ -61,29 +75,13 @@ export const Sidebar = ({
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={onToggleAddingPoints}
-        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${
-          isAddingPoints
-            ? "bg-blue-500 text-white shadow-lg"
-            : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
-        }`}
+        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isAddingPoints
+          ? "bg-blue-500 text-white shadow-lg"
+          : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+          }`}
         title="Adicionar Pontos"
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          role="img"
-          aria-label="Adicionar pontos"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="16" />
-          <line x1="8" y1="12" x2="16" y2="12" />
-        </svg>
+        <CgAdd />
       </motion.button>
 
       {/* Add Curves Tool */}
@@ -92,30 +90,29 @@ export const Sidebar = ({
         whileTap={{ scale: 0.9 }}
         onClick={onToggleAddingCurves}
         disabled={lines.length === 0}
-        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${
-          isAddingCurves
-            ? "bg-purple-500 text-white shadow-lg"
-            : lines.length === 0
-              ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-              : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
-        }`}
+        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isAddingCurves
+          ? "bg-purple-500 text-white shadow-lg"
+          : lines.length === 0
+            ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+            : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+          }`}
         title="Adicionar Curvas"
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          role="img"
-          aria-label="Adicionar curvas"
-        >
-          <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" />
-          <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z" />
-        </svg>
+        <TbEaseInOutControlPoints />
+      </motion.button>
+
+      {/* Add Text Tool */}
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={onToggleAddingText}
+        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isAddingText
+          ? "bg-green-500 text-white shadow-lg"
+          : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+          }`}
+        title="Adicionar Texto"
+      >
+        <RxText />
       </motion.button>
 
       {/* Delete Lines Tool */}
@@ -124,38 +121,22 @@ export const Sidebar = ({
         whileTap={{ scale: 0.9 }}
         onClick={onToggleDeletingLines}
         disabled={lines.length === 0}
-        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${
-          isDeletingLines
-            ? "bg-red-500 text-white shadow-lg"
-            : lines.length === 0
-              ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-              : "bg-gray-800 text-gray-300 hover:bg-red-600 hover:text-white"
-        }`}
+        className={`w-10 h-10 rounded-lg mb-3 flex items-center justify-center transition-all duration-200 ${isDeletingLines
+          ? "bg-red-500 text-white shadow-lg"
+          : lines.length === 0
+            ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+            : "bg-gray-800 text-gray-300 hover:bg-red-600 hover:text-white"
+          }`}
         title="Excluir Linhas"
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          role="img"
-          aria-label="Limpar gráfico"
-        >
-          <path d="M3 6h18" />
-          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-        </svg>
+        <MdDeleteOutline />
       </motion.button>
 
       {/* Divider */}
       <div className="w-8 h-px bg-gray-700 mb-3" />
 
-      {/* Line Layers */}
-      {lines.length > 0 && (
+      {/* Line Layers - Only show when points or curves tools are active */}
+      {lines.length > 0 && (isAddingPoints || isAddingCurves) && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -220,11 +201,10 @@ export const Sidebar = ({
                             type="button"
                             key={color}
                             onClick={() => onLineColorChange(line.id, color)}
-                            className={`w-6 h-6 rounded border-2 hover:scale-110 transition-transform ${
-                              line.color === color
-                                ? "border-white"
-                                : "border-gray-600"
-                            }`}
+                            className={`w-6 h-6 rounded border-2 hover:scale-110 transition-transform ${line.color === color
+                              ? "border-white"
+                              : "border-gray-600"
+                              }`}
                             style={{ backgroundColor: color }}
                             title={`Cor ${color}`}
                           />
@@ -260,6 +240,57 @@ export const Sidebar = ({
                   </motion.div>
                 </>
               )}
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+
+      {/* Text Layers - Only show when text tool is active */}
+      {texts && texts.length > 0 && isAddingText && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center space-y-2"
+        >
+          {texts.map((text, index) => (
+            <motion.div
+              key={text.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="relative"
+            >
+              {/* Text Item Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => onTextClick?.(text)}
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-600"
+                title={`Texto: "${text.content}" - Clique para editar`}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="17" y1="10" x2="3" y2="10" />
+                  <line x1="21" y1="6" x2="3" y2="6" />
+                  <line x1="21" y1="14" x2="3" y2="14" />
+                  <line x1="17" y1="18" x2="3" y2="18" />
+                </svg>
+              </motion.button>
+
+              {/* Text preview tooltip */}
+              <div className="absolute left-12 top-0 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity pointer-events-none z-50">
+                {text.content.length > 10
+                  ? `${text.content.slice(0, 10)}...`
+                  : text.content}
+              </div>
             </motion.div>
           ))}
         </motion.div>

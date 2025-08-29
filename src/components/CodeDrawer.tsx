@@ -274,8 +274,9 @@ const Chart = () => {
       role="img"
       aria-label="Chart with points and lines"
     >
-      ${showGrid
-        ? `{/* Grid background */}
+      ${
+        showGrid
+          ? `{/* Grid background */}
       <defs>
         <pattern 
           id="grid" 
@@ -292,7 +293,7 @@ const Chart = () => {
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#grid)" />`
-        : ""
+          : ""
       }
       
       {/* Lines */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { IoMdGrid } from "react-icons/io";
 
 export type AxesMode = "off" | "quadrants" | "single";
 
@@ -35,28 +36,13 @@ export const Toolbar = ({
             onClick={() =>
               onAxesModeChange(axesMode === "quadrants" ? "off" : "quadrants")
             }
-            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${
-              axesMode === "quadrants"
-                ? "bg-blue-100 text-blue-700 border border-blue-200"
-                : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
-            }`}
+            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${axesMode === "quadrants"
+              ? "bg-blue-100 text-blue-700 border border-blue-200"
+              : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
+              }`}
             title="4 Quadrantes"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              role="img"
-              aria-label="4 Quadrantes"
-            >
-              <line x1="12" y1="2" x2="12" y2="22" />
-              <line x1="2" y1="12" x2="22" y2="12" />
-            </svg>
+            <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="685.333" height="648" viewBox="0 0 514 486"><path d="M222.8 49.7C211.3 61.2 202 70.8 202 71.2s7.3.9 16.3 1l16.2.3v168L133 241l-101.5.5v19l101.5.5 101.5.5.5 101.5.5 101.5 7.5.3c4.1.2 8.5 0 9.7-.3l2.3-.5V261h170v33.5l21.7-21.8 21.8-21.7-21.8-21.7-21.7-21.8V241H255V72l9.3-.2c14.2-.2 21.8-.6 22.3-1 .6-.6-40.3-41.3-41.8-41.6-.7-.1-10.6 9.1-22 20.5" /><path d="M299.3 52.4c.3.8 3.3 5.5 6.6 10.4 3.4 5 6.1 9.4 6.1 9.7 0 .4-3.4 5.9-7.5 12.2-4.1 6.2-7.5 11.6-7.5 11.8 0 .3 2.2.5 4.9.5h4.9l4.7-7.5c2.5-4.1 5-7.7 5.6-8 .5-.4 3.2 3 6 7.4l5.2 8.1h4.8c2.7 0 4.9-.2 4.9-.5s-3.2-5.3-7-11.1c-3.9-5.7-7.3-11-7.6-11.7-.2-.7 2.3-5.5 5.7-10.7 8.2-12.7 8.1-12.2 2.3-11.8-4.6.3-4.9.5-8.1 5.8-5.7 9.3-5.1 8.8-7 6.3-1-1.2-3.1-4.4-4.8-7.2-2.9-5-3.1-5.1-7.9-5.1-3.7 0-4.7.3-4.3 1.4m100 99.9c.2.7 3.9 6.5 8.1 13L415 177v20.1l4.3-.3 4.2-.3.5-10c.3-5.5 1.1-11 1.8-12.3s4.2-6.8 7.8-12.2c3.5-5.5 6.4-10.2 6.4-10.5s-2-.5-4.5-.5c-4.9 0-5.1.3-11.9 12.2-1.4 2.6-3 5-3.6 5.3-.5.3-3.3-3.5-6.1-8.5l-5.3-9h-4.9c-3.6 0-4.8.3-4.4 1.3" /></svg>
           </motion.button>
 
           {/* Single Quadrant Button */}
@@ -66,30 +52,13 @@ export const Toolbar = ({
             onClick={() =>
               onAxesModeChange(axesMode === "single" ? "off" : "single")
             }
-            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${
-              axesMode === "single"
-                ? "bg-blue-100 text-blue-700 border border-blue-200"
-                : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
-            }`}
+            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${axesMode === "single"
+              ? "bg-blue-100 text-blue-700 border border-blue-200"
+              : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
+              }`}
             title="1 Quadrante"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              role="img"
-              aria-label="1 Quadrante"
-            >
-              <line x1="3" y1="21" x2="21" y2="21" />
-              <line x1="3" y1="21" x2="3" y2="3" />
-              <polyline points="17,7 21,3 17,3" />
-              <polyline points="7,17 3,21 3,17" />
-            </svg>
+            <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="685.333" height="648" viewBox="0 0 514 486"><path d="M144.8 130.7c-11.5 11.5-20.8 21.1-20.8 21.5s7.3.9 16.3 1l16.2.3.3 94.2.2 94.3h190v33.5l21.7-21.8 21.8-21.7-21.8-21.7-21.7-21.8V322H177V153l9.3-.2c14.2-.2 21.8-.6 22.3-1 .6-.6-40.3-41.3-41.8-41.6-.7-.1-10.6 9.1-22 20.5" /><path d="M221.3 133.4c.3.8 3.3 5.5 6.6 10.4 3.4 5 6.1 9.4 6.1 9.7 0 .4-3.4 5.9-7.5 12.2-4.1 6.2-7.5 11.6-7.5 11.8 0 .3 2.2.5 4.9.5h4.9l4.7-7.5c2.5-4.1 5-7.7 5.6-8 .5-.4 3.2 3 6 7.4l5.2 8.1h4.8c2.7 0 4.9-.2 4.9-.5s-3.2-5.3-7-11.1c-3.9-5.7-7.3-11-7.6-11.7-.2-.7 2.3-5.5 5.7-10.7 8.2-12.7 8.1-12.2 2.3-11.8-4.6.3-4.9.5-8.1 5.8-5.7 9.3-5.1 8.8-7 6.3-1-1.2-3.1-4.4-4.8-7.2-2.9-5-3.1-5.1-7.9-5.1-3.7 0-4.7.3-4.3 1.4m100 99.9c.2.7 3.9 6.5 8.1 13L337 258v20.1l4.3-.3 4.2-.3.5-10c.3-5.5 1.1-11 1.8-12.3s4.2-6.8 7.8-12.2c3.5-5.5 6.4-10.2 6.4-10.5s-2-.5-4.5-.5c-4.9 0-5.1.3-11.9 12.2-1.4 2.6-3 5-3.6 5.3-.5.3-3.3-3.5-6.1-8.5l-5.3-9h-4.9c-3.6 0-4.8.3-4.4 1.3" /></svg>
           </motion.button>
 
           {/* Grid Toggle Button */}
@@ -97,30 +66,13 @@ export const Toolbar = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onToggleGrid}
-            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${
-              showGrid
-                ? "bg-blue-100 text-blue-700 border border-blue-200"
-                : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
-            }`}
+            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${showGrid
+              ? "bg-blue-100 text-blue-700 border border-blue-200"
+              : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
+              }`}
             title={showGrid ? "Ocultar grid" : "Mostrar grid"}
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              role="img"
-              aria-label="Grid"
-            >
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-            </svg>
+            <IoMdGrid size={30} />
           </motion.button>
 
           {/* Divider */}

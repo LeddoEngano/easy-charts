@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import type { ChartData, Line, Point, PointStyle } from "@/types/chart";
+import type { ChartData, Line, Point, PointStyle, Text } from "@/types/chart";
 import type { AxesMode } from "@/components/Toolbar";
 
 const STORAGE_KEY = "easy-charts-data";
@@ -24,11 +24,14 @@ export const useChart = () => {
   const [chartData, setChartData] = useState<ChartData>({
     points: [],
     lines: [],
+    texts: [],
   });
 
   const [isAddingPoints, setIsAddingPoints] = useState(true);
   const [isAddingCurves, setIsAddingCurves] = useState(false);
+  const [isAddingText, setIsAddingText] = useState(false);
   const [draggedPointId, setDraggedPointId] = useState<string | null>(null);
+  const [draggedTextId, setDraggedTextId] = useState<string | null>(null);
   const [currentColor, setCurrentColor] = useState("#3b82f6"); // Default blue
   const [isNewLineMode, setIsNewLineMode] = useState(false);
   const [hoveredLineId, setHoveredLineId] = useState<string | null>(null);
@@ -55,7 +58,13 @@ export const useChart = () => {
     if (saved) {
       try {
         const parsedData = JSON.parse(saved);
-        setChartData(parsedData);
+        // Ensure backwards compatibility - add texts array if it doesn't exist
+        const chartData: ChartData = {
+          points: parsedData.points || [],
+          lines: parsedData.lines || [],
+          texts: parsedData.texts || [],
+        };
+        setChartData(chartData);
       } catch (error) {
         console.warn("Failed to parse saved chart data:", error);
       }
@@ -147,6 +156,7 @@ export const useChart = () => {
         }
 
         return {
+          ...prev,
           points: newPoints,
           lines: newLines,
         };
@@ -166,6 +176,71 @@ export const useChart = () => {
     [isAddingPoints, chartData.points.length, addPoint],
   );
 
+  // Add text to the chart
+  const addText = useCallback((x: number, y: number, content: string) => {
+    console.log("addText called with:", { x, y, content });
+    setChartData((prev) => {
+      const newText: Text = {
+        id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        x,
+        y,
+        content,
+        color: "#000000",
+        fontSize: 14,
+        fontFamily: "Arial",
+      };
+
+      const updatedData = {
+        ...prev,
+        texts: [...(prev.texts || []), newText],
+      };
+
+      console.log("Updated chartData:", updatedData);
+      return updatedData;
+    });
+  }, []);
+
+  // Update text position (for dragging)
+  const updateTextPosition = useCallback(
+    (textId: string, x: number, y: number) => {
+      setChartData((prev) => ({
+        ...prev,
+        texts: prev.texts.map((text) =>
+          text.id === textId ? { ...text, x, y } : text,
+        ),
+      }));
+    },
+    [],
+  );
+
+  // Update text content
+  const updateTextContent = useCallback((textId: string, content: string) => {
+    setChartData((prev) => ({
+      ...prev,
+      texts: prev.texts.map((text) =>
+        text.id === textId ? { ...text, content } : text,
+      ),
+    }));
+  }, []);
+
+  // Update text properties
+  const updateText = useCallback((textId: string, updates: Partial<Text>) => {
+    setChartData((prev) => ({
+      ...prev,
+      texts: prev.texts.map((text) =>
+        text.id === textId ? { ...text, ...updates } : text,
+      ),
+    }));
+  }, []);
+
+  // Remove text
+  const removeText = useCallback((textId: string) => {
+    setChartData((prev) => ({
+      ...prev,
+      texts: prev.texts.filter((text) => text.id !== textId),
+    }));
+  }, []);
+
   // Add control point to a line
   const addControlPointToLine = useCallback(
     (lineId: string, x: number, y: number) => {
@@ -182,6 +257,7 @@ export const useChart = () => {
       };
 
       setChartData((prev) => ({
+        ...prev,
         points: [...prev.points, controlPoint],
         lines: prev.lines.map((line) =>
           line.id === lineId
@@ -192,9 +268,6 @@ export const useChart = () => {
             : line,
         ),
       }));
-
-      // Deactivate curve mode after adding
-      setIsAddingCurves(false);
     },
     [isAddingCurves, chartData.points],
   );
@@ -231,6 +304,7 @@ export const useChart = () => {
         const updatedPoint = updatedPoints.find((p) => p.id === pointId);
 
         return {
+          ...prev,
           points: updatedPoints,
           lines: prev.lines.map((line) => {
             if (line.startPointId === pointId && updatedPoint) {
@@ -264,12 +338,17 @@ export const useChart = () => {
     setDraggedPointId(null);
     setDragStartPosition(null);
     setIsDragging(false);
+    // Reset actuallyDragged after a short delay to allow menu logic to work
+    setTimeout(() => {
+      setActuallyDragged(false);
+    }, 100);
   }, []);
 
   // Toggle adding points mode
   const toggleAddingPoints = useCallback(() => {
     setIsAddingPoints((prev) => !prev);
     setIsAddingCurves(false); // Deactivate curve mode when activating point mode
+    setIsAddingText(false); // Deactivate text mode when activating point mode
     setIsDeletingLines(false); // Deactivate delete mode when activating point mode
   }, []);
 
@@ -277,12 +356,22 @@ export const useChart = () => {
   const toggleAddingCurves = useCallback(() => {
     setIsAddingCurves((prev) => !prev);
     setIsAddingPoints(false); // Deactivate point mode when activating curve mode
+    setIsAddingText(false); // Deactivate text mode when activating curve mode
     setIsDeletingLines(false); // Deactivate delete mode when activating curve mode
+  }, []);
+
+  // Toggle adding text mode
+  const toggleAddingText = useCallback(() => {
+    setIsAddingText((prev) => !prev);
+    setIsAddingPoints(false); // Deactivate point mode when activating text mode
+    setIsAddingCurves(false); // Deactivate curve mode when activating text mode
+    setIsDeletingLines(false); // Deactivate delete mode when activating text mode
   }, []);
 
   // Remove a point and its associated lines
   const removePoint = useCallback((pointId: string) => {
     setChartData((prev) => ({
+      ...prev,
       points: prev.points.filter((point) => point.id !== pointId),
       lines: prev.lines.filter(
         (line) =>
@@ -317,6 +406,7 @@ export const useChart = () => {
       );
 
       return {
+        ...prev,
         points: updatedPoints,
         lines: updatedLines,
       };
@@ -328,6 +418,7 @@ export const useChart = () => {
     setChartData({
       points: [],
       lines: [],
+      texts: [],
     });
     // Clear from localStorage
     localStorage.removeItem(STORAGE_KEY);
@@ -358,6 +449,7 @@ export const useChart = () => {
     setChartData({
       points: [],
       lines: [],
+      texts: [],
     });
 
     // Restore data after a brief moment to trigger animations
@@ -411,6 +503,7 @@ export const useChart = () => {
     setIsDeletingLines((prev) => !prev);
     setIsAddingPoints(false);
     setIsAddingCurves(false);
+    setIsAddingText(false);
   }, []);
 
   // Update cursor position
@@ -451,7 +544,9 @@ export const useChart = () => {
 
   // Check if should open menu (simple logic)
   const shouldOpenMenu = useCallback(() => {
-    return !isDragging && !actuallyDragged;
+    const canOpen = !isDragging && !actuallyDragged;
+    console.log("🔍 shouldOpenMenu:", { isDragging, actuallyDragged, canOpen });
+    return canOpen;
   }, [isDragging, actuallyDragged]);
 
   // Set axes mode
@@ -468,8 +563,11 @@ export const useChart = () => {
     chartData,
     isAddingPoints,
     isAddingCurves,
+    isAddingText,
     isDeletingLines,
     draggedPointId,
+    draggedTextId,
+    setDraggedTextId,
     isDragging,
     currentColor,
     hoveredLineId,
@@ -479,6 +577,11 @@ export const useChart = () => {
     showGrid,
     addPoint,
     addPointByClick,
+    addText,
+    updateTextPosition,
+    updateTextContent,
+    updateText,
+    removeText,
     addControlPointToLine,
     updatePointPosition,
     startDragging,
@@ -487,6 +590,7 @@ export const useChart = () => {
     resetDragState,
     toggleAddingPoints,
     toggleAddingCurves,
+    toggleAddingText,
     toggleDeletingLines,
     removePoint,
     removeLine,

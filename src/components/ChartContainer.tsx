@@ -3,21 +3,31 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useChart } from "@/hooks/useChart";
-import type { Line, Point } from "@/types/chart";
+import {
+  useCanvasInteraction,
+  type CanvasItem,
+  type InteractionEvent,
+} from "@/hooks/useCanvasInteraction";
+import type { Line, Point, Text } from "@/types/chart";
 import { Chart } from "./Chart";
 import { Header } from "./Header";
 import { PointStyleMenu } from "./PointStyleMenu";
+import { TextStyleMenu } from "./TextStyleMenu";
 import { Sidebar } from "./Sidebar";
 import { CodeDrawer } from "./CodeDrawer";
 import { Toolbar, type AxesMode } from "./Toolbar";
+
 
 export const ChartContainer = () => {
   const {
     chartData,
     isAddingPoints,
     isAddingCurves,
+    isAddingText,
     isDeletingLines,
     draggedPointId,
+    draggedTextId,
+    setDraggedTextId,
     isDragging,
     hoveredLineId,
     cursorPosition,
@@ -25,6 +35,11 @@ export const ChartContainer = () => {
     axesMode,
     showGrid,
     addPointByClick,
+    addText,
+    updateTextPosition,
+    updateTextContent,
+    updateText,
+    removeText,
     addControlPointToLine,
     updatePointPosition,
     startDragging,
@@ -33,6 +48,7 @@ export const ChartContainer = () => {
     resetDragState,
     toggleAddingPoints,
     toggleAddingCurves,
+    toggleAddingText,
     toggleDeletingLines,
     removeLine,
     removePoint,
@@ -50,48 +66,151 @@ export const ChartContainer = () => {
   } = useChart();
 
   const [isCodeDrawerOpen, setIsCodeDrawerOpen] = useState(false);
-  const [isPointClicked, setIsPointClicked] = useState(false);
-  const [lastClickedPoint, setLastClickedPoint] = useState<{
-    point: Point;
-    event: React.MouseEvent;
-  } | null>(null);
 
-  // Effect para detectar quando o arrasto termina e abrir o menu
-  useEffect(() => {
-    if (!isDragging && lastClickedPoint) {
-      const canOpen = shouldOpenMenu();
-
-      if (canOpen) {
-        openPointStyleMenu(
-          lastClickedPoint.point.id,
-          lastClickedPoint.event.clientX,
-          lastClickedPoint.event.clientY,
-        );
+  // Canvas interaction hook
+  const canvasInteraction = useCanvasInteraction({
+    onItemClick: (interaction: InteractionEvent) => {
+      // Handle delete mode first
+      if (isDeletingLines) {
+        if (interaction.item.type === "point") {
+          console.log("🗑️ Deleting point:", interaction.item.id);
+          removePoint(interaction.item.id);
+          return;
+        } else if (interaction.item.type === "text") {
+          console.log("🗑️ Deleting text:", interaction.item.id);
+          removeText(interaction.item.id);
+          return;
+        }
       }
 
-      setLastClickedPoint(null);
-    }
-  }, [isDragging, lastClickedPoint, shouldOpenMenu, openPointStyleMenu]);
+      // Handle normal menu opening
+      if (interaction.item.type === "point") {
+        openPointStyleMenu(
+          interaction.item.id,
+          interaction.position.x,
+          interaction.position.y,
+        );
+      } else if (interaction.item.type === "text") {
+        // Open style menu with default position (will be updated when input renders)
+        setTextStyleMenu({
+          text: interaction.item.data,
+          x: interaction.position.x + 50, // Temporary position
+          y: interaction.position.y - 30, // Temporary position
+        });
+
+        // Start inline editing
+        const text = interaction.item.data;
+        console.log("🔧 Setting editingText:", text);
+        setEditingText({
+          id: text.id,
+          content: text.content,
+          x: text.x,
+          y: text.y,
+          fontSize: text.fontSize,
+          color: text.color,
+          fontFamily: text.fontFamily,
+        });
+      }
+    },
+    onItemDragStart: (interaction: InteractionEvent) => {
+      if (interaction.item.type === "point") {
+        startDragging(
+          interaction.item.id,
+          interaction.position.x,
+          interaction.position.y,
+        );
+      } else if (interaction.item.type === "text") {
+        setDraggedTextId(interaction.item.id);
+      }
+    },
+    onItemDragMove: (interaction: InteractionEvent) => {
+      // Convert screen coordinates to chart coordinates
+      const rect = document
+        .querySelector(".chart-container")
+        ?.getBoundingClientRect();
+      if (rect) {
+        const x = interaction.position.x - rect.left - 40;
+        const y = interaction.position.y - rect.top - 40;
+        const clampedX = Math.max(0, Math.min(x, 800 - 80));
+        const clampedY = Math.max(0, Math.min(y, 600 - 80));
+
+        if (interaction.item.type === "point") {
+          updatePointPosition(interaction.item.id, clampedX, clampedY);
+        } else if (interaction.item.type === "text") {
+          updateTextPosition(interaction.item.id, clampedX, clampedY);
+        }
+      }
+    },
+    onItemDragEnd: (interaction: InteractionEvent) => {
+      if (interaction.item.type === "point") {
+        stopDragging();
+      } else if (interaction.item.type === "text") {
+        setDraggedTextId(null);
+      }
+    },
+    onToolActivation: (x: number, y: number, event: React.MouseEvent) => {
+      handleChartClick(x, y, event);
+    },
+    isDraggingExternal: isDragging,
+    shouldOpenMenu,
+    isDeleteMode: isDeletingLines,
+  });
+
+  const [editingText, setEditingText] = useState<{
+    id: string;
+    content: string;
+    x: number;
+    y: number;
+    fontSize: number;
+    color: string;
+    fontFamily: string;
+  } | null>(null);
+
+  const [textStyleMenu, setTextStyleMenu] = useState<{
+    text: Text;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const handlePointClick = (point: Point, event: React.MouseEvent) => {
-    setIsPointClicked(true);
-
     if (isDeletingLines) {
       removePoint(point.id);
       return;
     }
 
-    setLastClickedPoint({ point, event });
-    setTimeout(() => setIsPointClicked(false), 50);
+    const canvasItem: CanvasItem = {
+      id: point.id,
+      type: "point",
+      data: point,
+    };
+
+    canvasInteraction.handleItemInteraction(canvasItem, event);
   };
 
-  const handleChartClick = (x: number, y: number) => {
-    if (isPointClicked) {
+  const handleChartClick = (x: number, y: number, event?: React.MouseEvent) => {
+    console.log("🔧 handleChartClick called:", { x, y, isAddingText, isAddingPoints, isDeletingLines });
+
+    // Allow delete tool to activate even when interacting with objects
+    // Other tools should be blocked when interacting with objects
+    if (canvasInteraction.shouldPreventToolActivation && !isDeletingLines) {
+      console.log("🔧 Tool activation prevented by canvasInteraction");
       return;
     }
 
     if (isAddingPoints) {
+      console.log("🔧 Adding point");
       addPointByClick(x, y);
+    } else if (isAddingText && event) {
+      console.log("🔧 Adding text at coordinates:", { x, y });
+      // Get the SVG element position to calculate correct screen coordinates
+      const svgElement = event.currentTarget;
+      const containerRect = svgElement.getBoundingClientRect();
+      console.log("🔧 SVG container rect:", containerRect);
+
+      // Add new text directly
+      addText(x, y, "Novo texto");
+    } else {
+      console.log("🔧 No action taken - conditions not met");
     }
   };
 
@@ -103,22 +222,143 @@ export const ChartContainer = () => {
     }
   };
 
-  const handlePointDrag = (pointId: string, x: number, y: number) => {
-    updatePointPosition(pointId, x, y);
-  };
-
-  const handlePointDragStart = (
-    pointId: string,
+  const handleTextDragStart = (
+    textId: string,
     startX: number,
     startY: number,
+    event: React.MouseEvent,
   ) => {
-    setIsPointClicked(true);
-    startDragging(pointId, startX, startY);
+    const text = chartData.texts.find((t) => t.id === textId);
+    if (!text) return;
+
+    const canvasItem: CanvasItem = {
+      id: textId,
+      type: "text",
+      data: text,
+    };
+
+    canvasInteraction.handleItemDragStart(canvasItem, startX, startY, event);
   };
 
-  const handlePointDragEnd = () => {
-    stopDragging();
+  const handleTextClick = (text: Text, event: React.MouseEvent) => {
+    if (isDeletingLines) {
+      removeText(text.id);
+      return;
+    }
+
+    const canvasItem: CanvasItem = {
+      id: text.id,
+      type: "text",
+      data: text,
+    };
+
+    canvasInteraction.handleItemInteraction(canvasItem, event);
   };
+
+  const handleTextEdit = (text: Text, event: React.MouseEvent) => {
+    // Get the SVG element position to calculate correct screen coordinates
+    const svgElement = event.currentTarget.closest("svg");
+    const containerRect = svgElement?.getBoundingClientRect();
+
+    if (containerRect) {
+      // Start editing with screen coordinates
+      setEditingText({
+        id: text.id,
+        content: text.content,
+        x: containerRect.left + text.x + 40, // SVG left + text x + padding
+        y: containerRect.top + text.y + 40 - text.fontSize * 0.2, // SVG top + text y + padding - baseline adjustment
+        fontSize: text.fontSize,
+        color: text.color,
+        fontFamily: text.fontFamily,
+      });
+    } else {
+      // Fallback to original method
+      setEditingText({
+        id: text.id,
+        content: text.content,
+        x: text.x,
+        y: text.y,
+        fontSize: text.fontSize,
+        color: text.color,
+        fontFamily: text.fontFamily,
+      });
+    }
+  };
+
+  const handleTextChange = (textId: string, newContent: string) => {
+    // Don't update content in real-time to avoid cursor issues
+    // Content will be updated when editing ends
+  };
+
+  const handleTextEditEnd = (finalContent: string) => {
+    console.log("🔧 handleTextEditEnd called with:", finalContent);
+    console.log("🔧 editingText:", editingText);
+
+    if (editingText && finalContent.trim()) {
+      console.log("🔧 Updating text content for ID:", editingText.id);
+      updateTextContent(editingText.id, finalContent);
+    } else {
+      console.log("🔧 No update needed - empty content or no editingText");
+    }
+    setEditingText(null);
+  };
+
+  // Update menu position when input is rendered
+  useEffect(() => {
+    if (editingText && textStyleMenu) {
+      const inputElement = document.querySelector(
+        ".editing-textarea",
+      ) as HTMLTextAreaElement;
+      const contentArea = document.querySelector(
+        ".flex-1.flex.flex-col",
+      ) as HTMLElement; // The main content area
+
+      if (inputElement && contentArea) {
+        const inputRect = inputElement.getBoundingClientRect();
+        const containerRect = contentArea.getBoundingClientRect();
+        // Simple menu positioning logic
+        const menuWidth = 320;
+        const menuHeight = 400;
+        const margin = 10;
+
+        let menuX = inputRect.left;
+        let menuY = inputRect.bottom + margin;
+
+        // Adjust if menu goes outside container
+        if (menuY + menuHeight > containerRect.bottom - margin) {
+          menuY = inputRect.top - menuHeight - margin;
+        }
+        if (menuX + menuWidth > containerRect.right - margin) {
+          menuX = containerRect.right - menuWidth - margin;
+        }
+        if (menuX < containerRect.left + margin) {
+          menuX = containerRect.left + margin;
+        }
+        if (menuY < containerRect.top + margin) {
+          menuY = containerRect.top + margin;
+        }
+
+        // Only update if position actually changed
+        setTextStyleMenu((prev) => {
+          if (!prev) return null;
+
+          const hasChanged =
+            Math.abs(prev.x - menuX) > 1 ||
+            Math.abs(prev.y - menuY) > 1;
+
+          if (hasChanged) {
+            return {
+              ...prev,
+              x: menuX,
+              y: menuY,
+            };
+          }
+
+          return prev; // Return same object to prevent re-render
+        });
+      }
+    }
+  }, [editingText]); // Remove textStyleMenu from dependencies
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDeletingLines) {
@@ -363,6 +603,7 @@ export const ChartContainer = () => {
         <Sidebar
           onToggleAddingPoints={toggleAddingPoints}
           onToggleAddingCurves={toggleAddingCurves}
+          onToggleAddingText={toggleAddingText}
           onToggleDeletingLines={toggleDeletingLines}
           onClearChart={clearChart}
           onLineColorChange={changeLineColor}
@@ -370,11 +611,22 @@ export const ChartContainer = () => {
           onLineHover={setHoveredLine}
           isAddingPoints={isAddingPoints}
           isAddingCurves={isAddingCurves}
+          isAddingText={isAddingText}
           isDeletingLines={isDeletingLines}
           lines={chartData.lines.map((line) => ({
             id: line.id,
             color: line.color,
           }))}
+          texts={chartData.texts || []}
+          onTextClick={(text) => {
+            // Open text style menu (same as clicking on text in canvas)
+            setTextStyleMenu({
+              text,
+              x: 300, // Fixed position since it's from sidebar
+              y: 200,
+            });
+          }}
+          onTextDelete={removeText}
         />
 
         <div className="flex-1 flex flex-col">
@@ -398,14 +650,21 @@ export const ChartContainer = () => {
               <Chart
                 points={chartData.points}
                 lines={chartData.lines}
+                texts={chartData.texts || []}
                 onPointClick={handlePointClick}
                 onLineClick={handleLineClick}
                 onChartClick={handleChartClick}
-                onPointDrag={handlePointDrag}
-                onPointDragStart={handlePointDragStart}
-                onPointDragEnd={handlePointDragEnd}
+                onTextClick={handleTextClick}
+                onTextEdit={handleTextEdit}
+                onTextChange={handleTextChange}
+                onTextEditEnd={(textId, finalContent) =>
+                  handleTextEditEnd(finalContent)
+                }
+                onTextDragStart={handleTextDragStart}
+                editingTextId={editingText?.id || null}
                 isAddingPoints={isAddingPoints}
                 isAddingCurves={isAddingCurves}
+                isAddingText={isAddingText}
                 isDeletingLines={isDeletingLines}
                 draggedPointId={draggedPointId}
                 hoveredLineId={hoveredLineId}
@@ -416,6 +675,7 @@ export const ChartContainer = () => {
                 showGrid={showGrid}
                 width={800}
                 height={600}
+                canvasInteraction={canvasInteraction}
               />
             </motion.div>
           </div>
@@ -469,6 +729,17 @@ export const ChartContainer = () => {
             updatePointStyle(pointStyleMenu.pointId, style)
           }
           onClose={closePointStyleMenu}
+        />
+      )}
+
+      {/* Text Style Menu */}
+      {textStyleMenu && (
+        <TextStyleMenu
+          text={textStyleMenu.text}
+          x={textStyleMenu.x}
+          y={textStyleMenu.y}
+          onUpdateText={updateText}
+          onClose={() => setTextStyleMenu(null)}
         />
       )}
 

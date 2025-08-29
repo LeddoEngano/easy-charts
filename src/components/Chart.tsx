@@ -2,20 +2,34 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import type { Line, Point } from "@/types/chart";
+import type { Line, Point, Text } from "@/types/chart";
 import type { AxesMode } from "./Toolbar";
+import { EditableText } from "./EditableText";
 
 interface ChartProps {
   points: Point[];
   lines: Line[];
+  texts: Text[];
   onPointClick?: (point: Point, event: React.MouseEvent) => void;
   onLineClick?: (line: Line, x: number, y: number) => void;
-  onChartClick?: (x: number, y: number) => void;
+  onChartClick?: (x: number, y: number, event?: React.MouseEvent) => void;
   onPointDrag?: (pointId: string, x: number, y: number) => void;
   onPointDragStart?: (pointId: string, startX: number, startY: number) => void;
   onPointDragEnd?: () => void;
+  onTextClick?: (text: Text, event: React.MouseEvent) => void;
+  onTextEdit?: (text: Text, event: React.MouseEvent) => void;
+  onTextChange?: (textId: string, newContent: string) => void;
+  onTextEditEnd?: (textId: string, finalContent: string) => void;
+  onTextDragStart?: (
+    textId: string,
+    startX: number,
+    startY: number,
+    event: React.MouseEvent,
+  ) => void;
+  editingTextId?: string | null;
   isAddingPoints?: boolean;
   isAddingCurves?: boolean;
+  isAddingText?: boolean;
   isDeletingLines?: boolean;
   draggedPointId?: string | null;
   hoveredLineId?: string | null;
@@ -27,19 +41,40 @@ interface ChartProps {
   showGrid?: boolean;
   width?: number;
   height?: number;
+
+  // Canvas interaction hook
+  canvasInteraction?: {
+    handleItemInteraction: (item: any, event: React.MouseEvent) => boolean;
+    handleItemDragStart: (
+      item: any,
+      startX: number,
+      startY: number,
+      event: React.MouseEvent,
+    ) => boolean;
+    handleCanvasClick: (x: number, y: number, event: React.MouseEvent) => void;
+    shouldPreventToolActivation: boolean;
+  };
 }
 
 export const Chart = ({
   points,
   lines,
+  texts = [],
   onPointClick,
   onLineClick,
   onChartClick,
   onPointDrag,
   onPointDragStart,
   onPointDragEnd,
+  onTextClick,
+  onTextEdit,
+  onTextChange,
+  onTextEditEnd,
+  onTextDragStart,
+  editingTextId = null,
   isAddingPoints = false,
   isAddingCurves = false,
+  isAddingText = false,
   isDeletingLines = false,
   draggedPointId = null,
   hoveredLineId = null,
@@ -50,8 +85,10 @@ export const Chart = ({
   showGrid = true,
   width = 800,
   height = 600,
+  canvasInteraction,
 }: ChartProps) => {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+
   const padding = 40;
 
   // Close download menu when clicking outside
@@ -73,7 +110,7 @@ export const Chart = ({
   }, [showDownloadMenu]);
 
   const handleChartClick = (event: React.MouseEvent<SVGSVGElement>) => {
-    if (!isAddingPoints) return;
+    if (!isAddingPoints && !isAddingText) return;
 
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - rect.left - padding;
@@ -86,7 +123,11 @@ export const Chart = ({
       y >= 0 &&
       y <= height - 2 * padding
     ) {
-      onChartClick?.(x, y);
+      if (canvasInteraction) {
+        canvasInteraction.handleCanvasClick(x, y, event);
+      } else {
+        onChartClick?.(x, y, event);
+      }
     }
   };
 
@@ -141,29 +182,46 @@ export const Chart = ({
     const chartX = startX - rect.left - padding;
     const chartY = startY - rect.top - padding;
 
-    onPointDragStart?.(pointId, chartX, chartY);
+    if (canvasInteraction) {
+      const point = points.find((p) => p.id === pointId);
+      if (point) {
+        const canvasItem = {
+          id: pointId,
+          type: "point" as const,
+          data: point,
+        };
+        canvasInteraction.handleItemDragStart(
+          canvasItem,
+          chartX,
+          chartY,
+          event,
+        );
+      }
+    } else {
+      onPointDragStart?.(pointId, chartX, chartY);
 
-    // Add global mouse event listeners for better drag handling
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      const rect = svgElement.getBoundingClientRect();
-      const x = e.clientX - rect.left - padding;
-      const y = e.clientY - rect.top - padding;
+      // Add global mouse event listeners for better drag handling
+      const handleGlobalMouseMove = (e: MouseEvent) => {
+        const rect = svgElement.getBoundingClientRect();
+        const x = e.clientX - rect.left - padding;
+        const y = e.clientY - rect.top - padding;
 
-      // Ensure point stays within chart bounds
-      const clampedX = Math.max(0, Math.min(x, width - 2 * padding));
-      const clampedY = Math.max(0, Math.min(y, height - 2 * padding));
+        // Ensure point stays within chart bounds
+        const clampedX = Math.max(0, Math.min(x, width - 2 * padding));
+        const clampedY = Math.max(0, Math.min(y, height - 2 * padding));
 
-      onPointDrag?.(pointId, clampedX, clampedY);
-    };
+        onPointDrag?.(pointId, clampedX, clampedY);
+      };
 
-    const handleGlobalMouseUp = () => {
-      onPointDragEnd?.();
-      document.removeEventListener("mousemove", handleGlobalMouseMove);
-      document.removeEventListener("mouseup", handleGlobalMouseUp);
-    };
+      const handleGlobalMouseUp = () => {
+        onPointDragEnd?.();
+        document.removeEventListener("mousemove", handleGlobalMouseMove);
+        document.removeEventListener("mouseup", handleGlobalMouseUp);
+      };
 
-    document.addEventListener("mousemove", handleGlobalMouseMove);
-    document.addEventListener("mouseup", handleGlobalMouseUp);
+      document.addEventListener("mousemove", handleGlobalMouseMove);
+      document.addEventListener("mouseup", handleGlobalMouseUp);
+    }
   };
 
   const handlePointMouseUp = (point: Point, event?: React.MouseEvent) => {
@@ -171,16 +229,28 @@ export const Chart = ({
       event.stopPropagation();
       event.preventDefault();
     }
-    onPointDragEnd?.();
 
-    if (event) {
-      onPointClick?.(point, event);
+    if (canvasInteraction) {
+      // Use canvasInteraction for unified click/drag handling
+      const canvasItem = {
+        id: point.id,
+        type: "point" as const,
+        data: point,
+      };
+      canvasInteraction.handleItemInteraction(canvasItem, event!);
+    } else {
+      // Fallback to old system
+      onPointDragEnd?.();
+      if (event) {
+        onPointClick?.(point, event);
+      }
     }
   };
 
   const getCursorStyle = () => {
     if (isAddingPoints) return "crosshair";
     if (isAddingCurves) return "crosshair";
+    if (isAddingText) return "text";
     if (isDeletingLines) return "crosshair";
     return "default";
   };
@@ -205,6 +275,7 @@ export const Chart = ({
     if (isAddingPoints) return "Clique no gráfico para adicionar pontos";
     if (isAddingCurves)
       return "Clique em uma linha para adicionar ponto de controle (pode adicionar vários)";
+    if (isAddingText) return "Clique no gráfico para adicionar texto";
     if (isDeletingLines) return "Clique em linhas ou pontos para deletar";
     return "";
   };
@@ -395,28 +466,6 @@ export const Chart = ({
                 <polyline points="21,15 16,10 5,21" />
               </svg>
               PNG
-            </button>
-            <button
-              onClick={() => {
-                onDownloadChart?.("gif");
-                setShowDownloadMenu(false);
-              }}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21,15 16,10 5,21" />
-                <path d="M12 12h.01" />
-              </svg>
-              GIF (Animado)
             </button>
           </motion.div>
         )}
@@ -725,8 +774,8 @@ export const Chart = ({
           const isControlPoint = point.id.startsWith("control-");
           const isDragging = draggedPointId === point.id;
 
-          // Hide control points when not in curve editing mode
-          if (isControlPoint && !isAddingCurves) {
+          // Hide control points when not in curve editing mode or delete mode
+          if (isControlPoint && !isAddingCurves && !isDeletingLines) {
             return null;
           }
 
@@ -836,8 +885,66 @@ export const Chart = ({
           );
         })}
 
+        {/* Texts */}
+        {texts.map((text) => (
+          <g key={text.id}>
+            <EditableText
+              text={text}
+              isEditing={editingTextId === text.id}
+              onEditEnd={() => { }} // Not used anymore
+              onCancel={() => { }} // Not used anymore
+            />
+            {/* Invisible overlay for interaction handling */}
+            <rect
+              x={text.x - 5}
+              y={text.y - text.fontSize - 5}
+              width={text.content.length * (text.fontSize * 0.6) + 10}
+              height={text.fontSize + 10}
+              fill="transparent"
+              style={{ cursor: "pointer" }}
+              onMouseUp={(e) => {
+                e.stopPropagation(); // Prevent event from bubbling to canvas
+
+                if (canvasInteraction) {
+                  const canvasItem = {
+                    id: text.id,
+                    type: "text" as const,
+                    data: text,
+                  };
+                  canvasInteraction.handleItemInteraction(canvasItem, e);
+                } else {
+                  onTextClick?.(text, e);
+                }
+              }}
+              onDoubleClick={(e) => {
+                e.stopPropagation(); // Prevent event from bubbling to canvas
+                onTextEdit?.(text, e);
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation(); // Prevent event from bubbling to canvas
+
+                if (canvasInteraction) {
+                  const canvasItem = {
+                    id: text.id,
+                    type: "text" as const,
+                    data: text,
+                  };
+                  canvasInteraction.handleItemDragStart(
+                    canvasItem,
+                    e.clientX,
+                    e.clientY,
+                    e,
+                  );
+                } else {
+                  onTextDragStart?.(text.id, e.clientX, e.clientY, e);
+                }
+              }}
+            />
+          </g>
+        ))}
+
         {/* Visual indicator when adding points mode is active */}
-        {(isAddingPoints || isAddingCurves) && (
+        {(isAddingPoints || isAddingCurves || isAddingText) && (
           <motion.text
             x={width / 2}
             y={height - 20}

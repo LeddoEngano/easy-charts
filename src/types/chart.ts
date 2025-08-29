@@ -25,9 +25,20 @@ export interface Line {
   color: string; // Color of the line
 }
 
+export interface Text {
+  id: string;
+  x: number;
+  y: number;
+  content: string;
+  color: string;
+  fontSize: number;
+  fontFamily: string;
+}
+
 export interface ChartData {
   points: Point[];
   lines: Line[];
+  texts: Text[];
 }
 
 export interface ChartConfig {
