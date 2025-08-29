@@ -1,8 +1,8 @@
 "use client";
 
-import type { Line, LineStyle, Point, Text } from "@/types/chart";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import type { Line, LineStyle, Point, Text } from "@/types/chart";
 import { EditableText } from "./EditableText";
 import type { AxesMode } from "./Toolbar";
 
