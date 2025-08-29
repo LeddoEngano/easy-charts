@@ -123,14 +123,24 @@ I would love your input! To make contributing to Ez Charts as easy and transpare
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Creator
+## Creator  
 
-- Instagram: [@leddo_](https://www.instagram.com/leddo_)
-- Twitter: [@leddo_401](https://x.com/leddo_401)
+<p align="center">
+  <img src="https://rbvesetvqkizggncjbwr.supabase.co/storage/v1/object/public/media/leddo_founder.jpg" 
+       alt="Leddo Avatar" 
+       width="100" 
+       style="border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" />
+</p>
 
----
+<p align="center">
+  <a href="https://www.instagram.com/leddo_">
+    <img src="https://img.shields.io/badge/Instagram-%40leddo__-E4405F?logo=instagram&logoColor=white" />
+  </a>
+  <a href="https://x.com/leddo_401">
+    <img src="https://img.shields.io/badge/Twitter-%40leddo__401-1DA1F2?logo=twitter&logoColor=white" />
+  </a>
+</p>
 
 <div align="center">
-  <p><a href="https://www.instagram.com/leddo_">@leddo_</a> built this sh*t <3</p>
   <p>If you find this project helpful, please consider giving it a ⭐️</p>
 </div>
