@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { IoMdGrid } from "react-icons/io";
+import { FiRotateCcw, FiRotateCw } from "react-icons/fi";
 
 export type AxesMode = "off" | "quadrants" | "single";
 
@@ -11,6 +12,10 @@ interface ToolbarProps {
   showGrid: boolean;
   onToggleGrid: () => void;
   onOpenCodeDrawer?: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 export const Toolbar = ({
@@ -19,6 +24,10 @@ export const Toolbar = ({
   showGrid,
   onToggleGrid,
   onOpenCodeDrawer,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
 }: ToolbarProps) => {
   return (
     <motion.div
@@ -81,8 +90,45 @@ export const Toolbar = ({
           {/* Future tools can be added here */}
           <div className="text-sm text-gray-500">Ferramentas de gráfico</div>
 
-          {/* Spacer to push Code button to the right */}
+          {/* Spacer to push content to the right */}
           <div className="flex-1" />
+
+          {/* Undo/Redo Buttons */}
+          <div className="flex items-center gap-1">
+            {/* Undo Button */}
+            {onUndo && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onUndo}
+                disabled={!canUndo}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 border ${canUndo
+                  ? "bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400"
+                  : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                  }`}
+                title="Desfazer (Ctrl+Z)"
+              >
+                <FiRotateCcw className="w-4 h-4" />
+              </motion.button>
+            )}
+
+            {/* Redo Button */}
+            {onRedo && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onRedo}
+                disabled={!canRedo}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 border ${canRedo
+                  ? "bg-white hover:bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400"
+                  : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                  }`}
+                title="Refazer (Ctrl+Shift+Z)"
+              >
+                <FiRotateCw className="w-4 h-4" />
+              </motion.button>
+            )}
+          </div>
 
           {/* Code button */}
           {onOpenCodeDrawer && (

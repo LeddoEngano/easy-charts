@@ -816,7 +816,7 @@ export const useChart = () => {
   }, [historyIndex, history]);
 
   // Check if undo/redo are available
-  const canUndo = historyIndex > 0; // Need at least 1 state to undo
+  const canUndo = history.length > 2; // Need at least 2 states to undo (initial + 1 action)
   const canRedo = historyIndex < history.length - 1;
 
   // Debug logging for undo/redo state

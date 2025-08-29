@@ -54,34 +54,7 @@ export const Header = ({ onUndo, onRedo, canUndo = false, canRedo = false }: Hea
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
-            {/* Undo/Redo Buttons */}
-            <div className="flex items-center gap-1">
-              {/* Undo Button */}
-              <button
-                onClick={onUndo}
-                disabled={!canUndo}
-                className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 group border ${canUndo
-                    ? "bg-gray-800 hover:bg-gray-700 text-white border-gray-600 hover:scale-105"
-                    : "bg-gray-900 text-gray-500 border-gray-700 cursor-not-allowed"
-                  }`}
-                title="Desfazer (Ctrl+Z)"
-              >
-                <FiRotateCcw className="w-4 h-4" />
-              </button>
 
-              {/* Redo Button */}
-              <button
-                onClick={onRedo}
-                disabled={!canRedo}
-                className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 group border ${canRedo
-                    ? "bg-gray-800 hover:bg-gray-700 text-white border-gray-600 hover:scale-105"
-                    : "bg-gray-900 text-gray-500 border-gray-700 cursor-not-allowed"
-                  }`}
-                title="Refazer (Ctrl+Shift+Z)"
-              >
-                <FiRotateCw className="w-4 h-4" />
-              </button>
-            </div>
 
             {/* X (Twitter) Button */}
             <a

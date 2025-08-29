@@ -698,6 +698,10 @@ export const ChartContainer = () => {
             showGrid={showGrid}
             onToggleGrid={toggleGrid}
             onOpenCodeDrawer={handleOpenCodeDrawer}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
           />
 
           <div
