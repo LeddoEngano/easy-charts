@@ -37,6 +37,11 @@ export const useChart = () => {
   const [hoveredLineId, setHoveredLineId] = useState<string | null>(null);
   const [isDeletingLines, setIsDeletingLines] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [controlPointPreview, setControlPointPreview] = useState<{
+    lineId: string;
+    x: number;
+    y: number;
+  } | null>(null);
   const [pointStyleMenu, setPointStyleMenu] = useState<{
     pointId: string;
     x: number;
@@ -262,9 +267,9 @@ export const useChart = () => {
         lines: prev.lines.map((line) =>
           line.id === lineId
             ? {
-                ...line,
-                controlPointIds: [...line.controlPointIds, controlPoint.id],
-              }
+              ...line,
+              controlPointIds: [...line.controlPointIds, controlPoint.id],
+            }
             : line,
         ),
       }));
@@ -288,7 +293,7 @@ export const useChart = () => {
       if (dragStartPosition) {
         const distance = Math.sqrt(
           Math.pow(x - dragStartPosition.x, 2) +
-            Math.pow(y - dragStartPosition.y, 2),
+          Math.pow(y - dragStartPosition.y, 2),
         );
 
         if (distance > 8) {
@@ -358,7 +363,12 @@ export const useChart = () => {
     setIsAddingPoints(false); // Deactivate point mode when activating curve mode
     setIsAddingText(false); // Deactivate text mode when activating curve mode
     setIsDeletingLines(false); // Deactivate delete mode when activating curve mode
-  }, []);
+
+    // Clear control point preview when deactivating curve mode
+    if (isAddingCurves) {
+      setControlPointPreview(null);
+    }
+  }, [isAddingCurves]);
 
   // Toggle adding text mode
   const toggleAddingText = useCallback(() => {
@@ -370,16 +380,34 @@ export const useChart = () => {
 
   // Remove a point and its associated lines
   const removePoint = useCallback((pointId: string) => {
-    setChartData((prev) => ({
-      ...prev,
-      points: prev.points.filter((point) => point.id !== pointId),
-      lines: prev.lines.filter(
-        (line) =>
-          line.startPointId !== pointId &&
-          line.endPointId !== pointId &&
-          line.controlPointIds.every((cpId) => cpId !== pointId),
-      ),
-    }));
+    setChartData((prev) => {
+      // Check if this is a control point
+      const isControlPoint = pointId.startsWith("control-");
+
+      if (isControlPoint) {
+        // If it's a control point, only remove the point and update lines to remove it from controlPointIds
+        return {
+          ...prev,
+          points: prev.points.filter((point) => point.id !== pointId),
+          lines: prev.lines.map((line) => ({
+            ...line,
+            controlPointIds: line.controlPointIds.filter((cpId) => cpId !== pointId),
+          })),
+        };
+      } else {
+        // If it's a regular point (start or end point), remove the point and its associated lines
+        return {
+          ...prev,
+          points: prev.points.filter((point) => point.id !== pointId),
+          lines: prev.lines.filter(
+            (line) =>
+              line.startPointId !== pointId &&
+              line.endPointId !== pointId &&
+              line.controlPointIds.every((cpId) => cpId !== pointId),
+          ),
+        };
+      }
+    });
   }, []);
 
   // Remove a specific line and its associated points
@@ -498,6 +526,15 @@ export const useChart = () => {
     setHoveredLineId(lineId);
   }, []);
 
+  // Update control point preview
+  const updateControlPointPreview = useCallback((lineId: string | null, x?: number, y?: number) => {
+    if (lineId && x !== undefined && y !== undefined) {
+      setControlPointPreview({ lineId, x, y });
+    } else {
+      setControlPointPreview(null);
+    }
+  }, []);
+
   // Toggle delete mode
   const toggleDeletingLines = useCallback(() => {
     setIsDeletingLines((prev) => !prev);
@@ -573,6 +610,7 @@ export const useChart = () => {
     hoveredLineId,
     cursorPosition,
     pointStyleMenu,
+    controlPointPreview,
     axesMode,
     showGrid,
     addPoint,
@@ -599,6 +637,7 @@ export const useChart = () => {
     changeLineColor,
     startNewLine,
     setHoveredLine,
+    updateControlPointPreview,
     updateCursorPosition,
     openPointStyleMenu,
     closePointStyleMenu,

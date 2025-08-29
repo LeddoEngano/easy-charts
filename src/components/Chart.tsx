@@ -14,6 +14,7 @@ interface ChartProps {
   onLineClick?: (line: Line, x: number, y: number) => void;
   onChartClick?: (x: number, y: number, event?: React.MouseEvent) => void;
   onPointDrag?: (pointId: string, x: number, y: number) => void;
+  onLineMouseMove?: (line: Line, x: number, y: number) => void;
   onPointDragStart?: (pointId: string, startX: number, startY: number) => void;
   onPointDragEnd?: () => void;
   onTextClick?: (text: Text, event: React.MouseEvent) => void;
@@ -34,6 +35,11 @@ interface ChartProps {
   draggedPointId?: string | null;
   hoveredLineId?: string | null;
   cursorPosition?: { x: number; y: number };
+  controlPointPreview?: {
+    lineId: string;
+    x: number;
+    y: number;
+  } | null;
 
   onRestartAnimations?: () => void;
   onDownloadChart?: (format: "svg" | "png" | "gif") => void;
@@ -64,6 +70,7 @@ export const Chart = ({
   onLineClick,
   onChartClick,
   onPointDrag,
+  onLineMouseMove,
   onPointDragStart,
   onPointDragEnd,
   onTextClick,
@@ -79,6 +86,7 @@ export const Chart = ({
   draggedPointId = null,
   hoveredLineId = null,
   cursorPosition = { x: 0, y: 0 },
+  controlPointPreview = null,
   onRestartAnimations,
   onDownloadChart,
   axesMode = "off",
@@ -131,38 +139,197 @@ export const Chart = ({
     }
   };
 
-  const handleLineClick = (event: React.MouseEvent<SVGElement>, line: Line) => {
-    if (!isAddingCurves && !isDeletingLines) return;
-
+  const calculateClosestPointOnLine = (event: React.MouseEvent<SVGElement>, line: Line) => {
     // Get SVG container coordinates, not the line element coordinates
     const svgElement = event.currentTarget.closest("svg");
-    if (!svgElement) return;
+    if (!svgElement) return null;
 
     const rect = svgElement.getBoundingClientRect();
     const clickX = event.clientX - rect.left - padding;
     const clickY = event.clientY - rect.top - padding;
 
-    // Calculate the closest point on the line to the click position
-    const { startPoint, endPoint } = line;
-    const A = clickX - startPoint.x;
-    const B = clickY - startPoint.y;
-    const C = endPoint.x - startPoint.x;
-    const D = endPoint.y - startPoint.y;
+    // Get control points for this line
+    const controlPoints = points.filter((p) => line.controlPointIds.includes(p.id));
+    const hasControlPoints = controlPoints.length > 0;
 
-    const dot = A * C + B * D;
-    const lenSq = C * C + D * D;
-    let param = 0;
+    if (hasControlPoints) {
+      // Calculate closest point on Bézier curve
+      return calculateClosestPointOnBezierCurve(
+        clickX,
+        clickY,
+        line.startPoint,
+        line.endPoint,
+        controlPoints
+      );
+    } else {
+      // Calculate the closest point on the straight line to the click position
+      const { startPoint, endPoint } = line;
+      const A = clickX - startPoint.x;
+      const B = clickY - startPoint.y;
+      const C = endPoint.x - startPoint.x;
+      const D = endPoint.y - startPoint.y;
 
-    if (lenSq !== 0) param = dot / lenSq;
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let param = 0;
 
-    // Clamp parameter to line segment (0 to 1)
-    param = Math.max(0, Math.min(1, param));
+      if (lenSq !== 0) param = dot / lenSq;
 
-    // Calculate the exact point on the line
-    const lineX = startPoint.x + param * C;
-    const lineY = startPoint.y + param * D;
+      // Clamp parameter to line segment (0 to 1)
+      param = Math.max(0, Math.min(1, param));
 
-    onLineClick?.(line, lineX, lineY);
+      // Calculate the exact point on the line
+      const lineX = startPoint.x + param * C;
+      const lineY = startPoint.y + param * D;
+
+      return { x: lineX, y: lineY };
+    }
+  };
+
+  // Calculate closest point on Bézier curve using numerical approximation
+  const calculateClosestPointOnBezierCurve = (
+    clickX: number,
+    clickY: number,
+    startPoint: Point,
+    endPoint: Point,
+    controlPoints: Point[]
+  ) => {
+    let closestPoint = { x: startPoint.x, y: startPoint.y };
+    let minDistance = Math.sqrt(
+      Math.pow(clickX - startPoint.x, 2) + Math.pow(clickY - startPoint.y, 2)
+    );
+
+    // Check end point
+    const endDistance = Math.sqrt(
+      Math.pow(clickX - endPoint.x, 2) + Math.pow(clickY - endPoint.y, 2)
+    );
+    if (endDistance < minDistance) {
+      minDistance = endDistance;
+      closestPoint = { x: endPoint.x, y: endPoint.y };
+    }
+
+    // Sample the curve at regular intervals to find the closest point
+    const samples = 100;
+    for (let i = 0; i <= samples; i++) {
+      const t = i / samples;
+      const pointOnCurve = getPointOnBezierCurve(t, startPoint, endPoint, controlPoints);
+
+      const distance = Math.sqrt(
+        Math.pow(clickX - pointOnCurve.x, 2) + Math.pow(clickY - pointOnCurve.y, 2)
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPoint = pointOnCurve;
+      }
+    }
+
+    return closestPoint;
+  };
+
+  // Get point on Bézier curve at parameter t
+  const getPointOnBezierCurve = (
+    t: number,
+    startPoint: Point,
+    endPoint: Point,
+    controlPoints: Point[]
+  ) => {
+    if (controlPoints.length === 1) {
+      // Quadratic Bézier curve
+      const cp = controlPoints[0];
+      const x = Math.pow(1 - t, 2) * startPoint.x +
+        2 * (1 - t) * t * cp.x +
+        Math.pow(t, 2) * endPoint.x;
+      const y = Math.pow(1 - t, 2) * startPoint.y +
+        2 * (1 - t) * t * cp.y +
+        Math.pow(t, 2) * endPoint.y;
+      return { x, y };
+    } else if (controlPoints.length === 2) {
+      // Cubic Bézier curve
+      const cp1 = controlPoints[0];
+      const cp2 = controlPoints[1];
+      const x = Math.pow(1 - t, 3) * startPoint.x +
+        3 * Math.pow(1 - t, 2) * t * cp1.x +
+        3 * (1 - t) * Math.pow(t, 2) * cp2.x +
+        Math.pow(t, 3) * endPoint.x;
+      const y = Math.pow(1 - t, 3) * startPoint.y +
+        3 * Math.pow(1 - t, 2) * t * cp1.y +
+        3 * (1 - t) * Math.pow(t, 2) * cp2.y +
+        Math.pow(t, 3) * endPoint.y;
+      return { x, y };
+    } else {
+      // Multiple control points - use the same logic as generateComplexCurvePath
+      // For now, we'll use a simplified approach with multiple quadratic curves
+      if (controlPoints.length === 0) {
+        // Fallback to straight line
+        return {
+          x: startPoint.x + t * (endPoint.x - startPoint.x),
+          y: startPoint.y + t * (endPoint.y - startPoint.y)
+        };
+      }
+
+      // For multiple control points, we need to determine which segment we're in
+      const segmentCount = controlPoints.length;
+      const segmentIndex = Math.floor(t * segmentCount);
+      const segmentT = (t * segmentCount) % 1;
+
+      if (segmentIndex === 0) {
+        // First segment: from start to first control point
+        const cp = controlPoints[0];
+        const midX = (startPoint.x + cp.x) / 2;
+        const midY = (startPoint.y + cp.y) / 2;
+
+        const x = Math.pow(1 - segmentT, 2) * startPoint.x +
+          2 * (1 - segmentT) * segmentT * cp.x +
+          Math.pow(segmentT, 2) * midX;
+        const y = Math.pow(1 - segmentT, 2) * startPoint.y +
+          2 * (1 - segmentT) * segmentT * cp.y +
+          Math.pow(segmentT, 2) * midY;
+        return { x, y };
+      } else if (segmentIndex >= segmentCount) {
+        // Last segment: from last control point to end
+        const cp = controlPoints[segmentCount - 1];
+        const x = Math.pow(1 - segmentT, 2) * cp.x +
+          2 * (1 - segmentT) * segmentT * endPoint.x +
+          Math.pow(segmentT, 2) * endPoint.x;
+        const y = Math.pow(1 - segmentT, 2) * cp.y +
+          2 * (1 - segmentT) * segmentT * endPoint.y +
+          Math.pow(segmentT, 2) * endPoint.y;
+        return { x, y };
+      } else {
+        // Middle segments: between control points
+        const cp1 = controlPoints[segmentIndex - 1];
+        const cp2 = controlPoints[segmentIndex];
+        const midX = (cp1.x + cp2.x) / 2;
+        const midY = (cp1.y + cp2.y) / 2;
+
+        const x = Math.pow(1 - segmentT, 2) * cp1.x +
+          2 * (1 - segmentT) * segmentT * cp2.x +
+          Math.pow(segmentT, 2) * midX;
+        const y = Math.pow(1 - segmentT, 2) * cp1.y +
+          2 * (1 - segmentT) * segmentT * cp2.y +
+          Math.pow(segmentT, 2) * midY;
+        return { x, y };
+      }
+    }
+  };
+
+  const handleLineClick = (event: React.MouseEvent<SVGElement>, line: Line) => {
+    if (!isAddingCurves && !isDeletingLines) return;
+
+    const closestPoint = calculateClosestPointOnLine(event, line);
+    if (closestPoint) {
+      onLineClick?.(line, closestPoint.x, closestPoint.y);
+    }
+  };
+
+  const handleLineMouseMove = (event: React.MouseEvent<SVGElement>, line: Line) => {
+    if (!isAddingCurves) return;
+
+    const closestPoint = calculateClosestPointOnLine(event, line);
+    if (closestPoint) {
+      onLineMouseMove?.(line, closestPoint.x, closestPoint.y);
+    }
   };
 
   const handlePointMouseDown = (
@@ -683,27 +850,55 @@ export const Chart = ({
               key={`${line.id}-${line.startPoint.x}-${line.startPoint.y}-${line.endPoint.x}-${line.endPoint.y}`}
             >
               {/* Invisible clickable area for line */}
-              <line
-                x1={line.startPoint.x + padding}
-                y1={line.startPoint.y + padding}
-                x2={line.endPoint.x + padding}
-                y2={line.endPoint.y + padding}
-                stroke={isHovered ? "rgba(255, 255, 255, 0.3)" : "transparent"}
-                strokeWidth={isHovered ? "25" : "20"}
-                strokeLinecap="round"
-                onClick={(e) => handleLineClick(e, line)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleLineClick(e as any, line);
-                  }
-                }}
-                tabIndex={isAddingCurves || isDeletingLines ? 0 : -1}
-                style={{
-                  cursor:
-                    isAddingCurves || isDeletingLines ? "crosshair" : "default",
-                }}
-              />
+              {hasControlPoints ? (
+                /* Clickable area that follows the Bézier curve */
+                <path
+                  d={generateComplexCurvePath(line, controlPoints, padding)}
+                  fill="none"
+                  stroke={isHovered ? "rgba(255, 255, 255, 0.3)" : "transparent"}
+                  strokeWidth={isHovered ? "25" : "20"}
+                  strokeLinecap="round"
+                  onClick={(e) => handleLineClick(e, line)}
+                  onMouseMove={(e) => handleLineMouseMove(e, line)}
+                  onMouseLeave={() => onLineMouseMove?.(line, 0, 0)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleLineClick(e as any, line);
+                    }
+                  }}
+                  tabIndex={isAddingCurves || isDeletingLines ? 0 : -1}
+                  style={{
+                    cursor:
+                      isAddingCurves || isDeletingLines ? "crosshair" : "default",
+                  }}
+                />
+              ) : (
+                /* Clickable area for straight line */
+                <line
+                  x1={line.startPoint.x + padding}
+                  y1={line.startPoint.y + padding}
+                  x2={line.endPoint.x + padding}
+                  y2={line.endPoint.y + padding}
+                  stroke={isHovered ? "rgba(255, 255, 255, 0.3)" : "transparent"}
+                  strokeWidth={isHovered ? "25" : "20"}
+                  strokeLinecap="round"
+                  onClick={(e) => handleLineClick(e, line)}
+                  onMouseMove={(e) => handleLineMouseMove(e, line)}
+                  onMouseLeave={() => onLineMouseMove?.(line, 0, 0)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleLineClick(e as any, line);
+                    }
+                  }}
+                  tabIndex={isAddingCurves || isDeletingLines ? 0 : -1}
+                  style={{
+                    cursor:
+                      isAddingCurves || isDeletingLines ? "crosshair" : "default",
+                  }}
+                />
+              )}
 
               {/* Show either straight line or curved path */}
               {hasControlPoints ? (
@@ -768,6 +963,22 @@ export const Chart = ({
             </g>
           );
         })}
+
+        {/* Control Point Preview */}
+        {isAddingCurves && controlPointPreview && (
+          <motion.circle
+            cx={controlPointPreview.x + padding}
+            cy={controlPointPreview.y + padding}
+            r="6"
+            fill="rgba(139, 92, 246, 0.3)"
+            stroke="#8b5cf6"
+            strokeWidth="2"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            style={{ pointerEvents: "none" }}
+          />
+        )}
 
         {/* Points */}
         {points.map((point, index) => {

@@ -32,6 +32,7 @@ export const ChartContainer = () => {
     hoveredLineId,
     cursorPosition,
     pointStyleMenu,
+    controlPointPreview,
     axesMode,
     showGrid,
     addPointByClick,
@@ -57,6 +58,7 @@ export const ChartContainer = () => {
     changeLineColor,
     startNewLine,
     setHoveredLine,
+    updateControlPointPreview,
     updateCursorPosition,
     openPointStyleMenu,
     closePointStyleMenu,
@@ -219,6 +221,17 @@ export const ChartContainer = () => {
       addControlPointToLine(line.id, x, y);
     } else if (isDeletingLines) {
       removeLine(line.id);
+    }
+  };
+
+  const handleLineMouseMove = (line: Line, x: number, y: number) => {
+    if (isAddingCurves) {
+      if (x === 0 && y === 0) {
+        // Clear preview when mouse leaves the line
+        updateControlPointPreview(null);
+      } else {
+        updateControlPointPreview(line.id, x, y);
+      }
     }
   };
 
@@ -653,6 +666,7 @@ export const ChartContainer = () => {
                 texts={chartData.texts || []}
                 onPointClick={handlePointClick}
                 onLineClick={handleLineClick}
+                onLineMouseMove={handleLineMouseMove}
                 onChartClick={handleChartClick}
                 onTextClick={handleTextClick}
                 onTextEdit={handleTextEdit}
@@ -669,6 +683,7 @@ export const ChartContainer = () => {
                 draggedPointId={draggedPointId}
                 hoveredLineId={hoveredLineId}
                 cursorPosition={cursorPosition}
+                controlPointPreview={controlPointPreview}
                 onRestartAnimations={restartAnimations}
                 onDownloadChart={handleDownloadChart}
                 axesMode={axesMode}
