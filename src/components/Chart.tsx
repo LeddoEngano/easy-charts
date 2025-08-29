@@ -515,6 +515,35 @@ export const Chart = ({
     );
   };
 
+  // Calculate approximate length of a curved path
+  const calculateCurveLength = (line: Line, controlPoints: Point[]) => {
+    if (controlPoints.length === 0) {
+      return calculateLineLength(line.startPoint, line.endPoint);
+    }
+
+    // Sample the curve at regular intervals to calculate approximate length
+    const samples = 50;
+    let totalLength = 0;
+    let prevPoint = { x: line.startPoint.x, y: line.startPoint.y };
+
+    for (let i = 1; i <= samples; i++) {
+      const t = i / samples;
+      const currentPoint = getPointOnBezierCurve(t, line.startPoint, line.endPoint, controlPoints);
+
+      const segmentLength = Math.sqrt(
+        Math.pow(currentPoint.x - prevPoint.x, 2) +
+        Math.pow(currentPoint.y - prevPoint.y, 2)
+      );
+
+      totalLength += segmentLength;
+      prevPoint = currentPoint;
+    }
+
+
+
+    return totalLength;
+  };
+
   const generateComplexCurvePath = (
     line: Line,
     controlPoints: Point[],
@@ -947,27 +976,26 @@ export const Chart = ({
               {/* Show either straight line or curved path */}
               {hasControlPoints ? (
                 /* Complex curved path with multiple control points */
-                <motion.path
-                  key={`curved-${line.id}-${controlPoints.length}`}
-                  d={generateComplexCurvePath(line, controlPoints, padding)}
-                  fill="none"
-                  stroke={line.color}
-                  strokeWidth={isHovered ? "5" : getLineStyleProperties(line.style).strokeWidth}
-                  strokeLinecap="round"
-                  strokeDasharray={getLineStyleProperties(line.style).strokeDasharray}
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{
-                    duration: 2,
-                    ease: "easeInOut",
-                    delay: 0.3,
-                  }}
-                  style={{
-                    filter: isHovered
-                      ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
-                      : "none",
-                  }}
-                />
+                (() => {
+                  const styleProps = getLineStyleProperties(line.style);
+
+                  return (
+                    <path
+                      key={`curved-${line.id}-${controlPoints.length}`}
+                      d={generateComplexCurvePath(line, controlPoints, padding)}
+                      fill="none"
+                      stroke={line.color}
+                      strokeWidth={isHovered ? "5" : styleProps.strokeWidth}
+                      strokeLinecap="round"
+                      strokeDasharray={styleProps.strokeDasharray}
+                      style={{
+                        filter: isHovered
+                          ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
+                          : "none",
+                      }}
+                    />
+                  );
+                })()
               ) : (
                 /* Straight line with drawing animation from A to B */
                 (() => {
