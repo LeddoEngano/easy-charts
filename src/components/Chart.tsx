@@ -75,17 +75,13 @@ export const Chart = ({
   onPointDragEnd,
   onTextClick,
   onTextEdit,
-  onTextChange,
-  onTextEditEnd,
   onTextDragStart,
-  editingTextId = null,
   isAddingPoints = false,
   isAddingCurves = false,
   isAddingText = false,
   isDeletingLines = false,
   draggedPointId = null,
   hoveredLineId = null,
-  cursorPosition = { x: 0, y: 0 },
   controlPointPreview = null,
   onRestartAnimations,
   onDownloadChart,
@@ -510,8 +506,8 @@ export const Chart = ({
     if (isDeletingLines) {
       // Update cursor position for the trash icon
       const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const _x = e.clientX - rect.left;
+      const _y = e.clientY - rect.top;
       // This will be handled by the parent component
     }
   };
@@ -532,7 +528,7 @@ export const Chart = ({
     return isControlPoint ? "#6d28d9" : point.color;
   };
 
-  const getPointStrokeWidth = (point: Point, isControlPoint: boolean) => {
+  const getPointStrokeWidth = (point: Point, _isControlPoint: boolean) => {
     if (point.style === "border") return "3";
     if (point.style === "hollow") return "3";
     return "0"; // No stroke for default style
@@ -552,7 +548,7 @@ export const Chart = ({
   };
 
   // Calculate approximate length of a curved path
-  const calculateCurveLength = (line: Line, controlPoints: Point[]) => {
+  const _calculateCurveLength = (line: Line, controlPoints: Point[]) => {
     if (controlPoints.length === 0) {
       return calculateLineLength(line.startPoint, line.endPoint);
     }
@@ -631,6 +627,8 @@ export const Chart = ({
       className="relative bg-white border border-gray-200 rounded-lg shadow-lg outline-none focus:outline-none chart-container"
       style={{ width, height }}
       onMouseMove={handleMouseMove}
+      role="application"
+      aria-label="Interactive chart"
     >
       {/* Restart animations button */}
       <motion.button
@@ -703,6 +701,7 @@ export const Chart = ({
             className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[120px]"
           >
             <button
+              type="button"
               onClick={() => {
                 onDownloadChart?.("svg");
                 setShowDownloadMenu(false);
@@ -716,7 +715,9 @@ export const Chart = ({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
+                aria-label="Download SVG"
               >
+                <title>Download SVG</title>
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14,2 14,8 20,8" />
                 <line x1="16" y1="13" x2="8" y2="13" />
@@ -726,6 +727,7 @@ export const Chart = ({
               SVG
             </button>
             <button
+              type="button"
               onClick={() => {
                 onDownloadChart?.("png");
                 setShowDownloadMenu(false);
@@ -739,7 +741,9 @@ export const Chart = ({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
+                aria-label="Download PNG"
               >
+                <title>Download PNG</title>
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                 <circle cx="8.5" cy="8.5" r="1.5" />
                 <polyline points="21,15 16,10 5,21" />
@@ -972,6 +976,8 @@ export const Chart = ({
                   }
                   strokeWidth={isHovered ? "25" : "20"}
                   strokeLinecap="round"
+                  role="button"
+                  aria-label={`Interagir com linha ${line.id}`}
                   onClick={(e) => handleLineClick(e, line)}
                   onMouseMove={(e) => handleLineMouseMove(e, line)}
                   onMouseLeave={() => onLineMouseMove?.(line, 0, 0)}
@@ -1001,6 +1007,8 @@ export const Chart = ({
                   }
                   strokeWidth={isHovered ? "25" : "20"}
                   strokeLinecap="round"
+                  role="button"
+                  aria-label={`Interagir com linha ${line.id}`}
                   onClick={(e) => handleLineClick(e, line)}
                   onMouseMove={(e) => handleLineMouseMove(e, line)}
                   onMouseLeave={() => onLineMouseMove?.(line, 0, 0)}
@@ -1161,6 +1169,9 @@ export const Chart = ({
                   fill="transparent"
                   stroke="transparent"
                   strokeWidth="0"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Interagir com ponto ${point.id}`}
                   onMouseDown={(e) =>
                     handlePointMouseDown(e, point.id, e.clientX, e.clientY)
                   }
@@ -1276,12 +1287,7 @@ export const Chart = ({
         {/* Texts */}
         {texts.map((text) => (
           <g key={text.id}>
-            <EditableText
-              text={text}
-              isEditing={editingTextId === text.id}
-              onEditEnd={() => {}} // Not used anymore
-              onCancel={() => {}} // Not used anymore
-            />
+            <EditableText text={text} />
             {/* Invisible overlay for interaction handling */}
             <rect
               x={text.x - 5}
@@ -1290,6 +1296,9 @@ export const Chart = ({
               height={text.fontSize + 10}
               fill="transparent"
               style={{ cursor: "pointer" }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Editar texto: ${text.content}`}
               onMouseUp={(e) => {
                 e.stopPropagation(); // Prevent event from bubbling to canvas
 

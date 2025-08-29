@@ -129,8 +129,14 @@ export function TextStyleMenu({
     >
       {/* Text Content Editor */}
       <div className="mb-3">
-        <label className="block text-xs text-gray-300 mb-1">Conteúdo</label>
+        <label
+          htmlFor="text-content"
+          className="block text-xs text-gray-300 mb-1"
+        >
+          Conteúdo
+        </label>
         <input
+          id="text-content"
           type="text"
           value={localContent}
           onChange={(e) => {
@@ -183,8 +189,14 @@ export function TextStyleMenu({
 
       {/* Font Family */}
       <div className="mb-3">
-        <label className="block text-xs text-gray-300 mb-1">Fonte</label>
+        <label
+          htmlFor="font-family"
+          className="block text-xs text-gray-300 mb-1"
+        >
+          Fonte
+        </label>
         <select
+          id="font-family"
           value={text.fontFamily}
           onChange={(e) => handleFontFamilyChange(e.target.value)}
           className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500"
@@ -199,9 +211,12 @@ export function TextStyleMenu({
 
       {/* Font Size */}
       <div className="mb-3">
-        <label className="block text-xs text-gray-300 mb-1">Tamanho</label>
+        <label htmlFor="font-size" className="block text-xs text-gray-300 mb-1">
+          Tamanho
+        </label>
         <div className="flex items-center gap-2">
           <input
+            id="font-size"
             type="range"
             min="8"
             max="48"
@@ -220,9 +235,10 @@ export function TextStyleMenu({
 
       {/* Color */}
       <div className="mb-3">
-        <label className="block text-xs text-gray-300 mb-1">Cor</label>
+        <div className="block text-xs text-gray-300 mb-1">Cor</div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
             className="w-8 h-8 rounded border-2 border-gray-600"
             style={{ backgroundColor: text.color }}
@@ -246,6 +262,7 @@ export function TextStyleMenu({
         >
           {QUICK_COLORS.map((color) => (
             <button
+              type="button"
               key={color}
               onClick={() => handleColorChange(color)}
               className="w-6 h-6 rounded border border-gray-600 hover:scale-110 transition-transform"

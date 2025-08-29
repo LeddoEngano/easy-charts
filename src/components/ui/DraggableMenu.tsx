@@ -82,6 +82,7 @@ export function DraggableMenu({
         <div className="menu-header flex items-center justify-between p-3 border-b border-gray-700 cursor-grab active:cursor-grabbing">
           <h3 className="text-sm font-medium select-none">{title}</h3>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700 rounded"
           >
@@ -90,7 +91,9 @@ export function DraggableMenu({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-label="Fechar menu"
             >
+              <title>Fechar menu</title>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -106,7 +109,17 @@ export function DraggableMenu({
       </motion.div>
 
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <button
+        type="button"
+        className="fixed inset-0 z-40"
+        onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            onClose();
+          }
+        }}
+        aria-label="Fechar menu"
+      />
     </>
   );
 }

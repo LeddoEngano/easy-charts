@@ -3,17 +3,9 @@ import type { Text } from "../types/chart";
 
 interface EditableTextProps {
   text: Text;
-  isEditing: boolean;
-  onEditEnd: (finalContent: string) => void;
-  onCancel: () => void;
 }
 
-export const EditableText: React.FC<EditableTextProps> = ({
-  text,
-  isEditing,
-  onEditEnd,
-  onCancel,
-}) => {
+export const EditableText: React.FC<EditableTextProps> = ({ text }) => {
   // Parse text formatting - check for markdown-style formatting
   const parseFormattedText = (content: string) => {
     let formattedContent = content;

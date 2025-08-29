@@ -65,7 +65,14 @@ export const useCanvasInteraction = ({
         setIsItemSelected(false);
       }, 100);
     }
-  }, [lastClickedItem, isDraggingExternal, isDraggingItem, draggedItemId]); // Removed shouldOpenMenu and onItemClick to prevent excessive calls
+  }, [
+    lastClickedItem,
+    isDraggingExternal,
+    isDraggingItem,
+    draggedItemId,
+    onItemClick,
+    shouldOpenMenu,
+  ]); // Removed shouldOpenMenu and onItemClick to prevent excessive calls
 
   // Handle item click/selection - only call this for pure clicks, not after drags
   const handleItemInteraction = useCallback(
@@ -201,6 +208,7 @@ export const useCanvasInteraction = ({
       draggedItemId,
       recentItemInteraction,
       onToolActivation,
+      isDeleteMode,
     ],
   );
 

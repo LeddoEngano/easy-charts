@@ -15,7 +15,7 @@ import { Header } from "./Header";
 import { PointStyleMenu } from "./PointStyleMenu";
 import { Sidebar } from "./Sidebar";
 import { TextStyleMenu } from "./TextStyleMenu";
-import { type AxesMode, Toolbar } from "./Toolbar";
+import { Toolbar } from "./Toolbar";
 
 export const ChartContainer = () => {
   const {
@@ -25,7 +25,6 @@ export const ChartContainer = () => {
     isAddingText,
     isDeletingLines,
     draggedPointId,
-    draggedTextId,
     setDraggedTextId,
     isDragging,
     hoveredLineId,
@@ -45,7 +44,6 @@ export const ChartContainer = () => {
     startDragging,
     stopDragging,
     shouldOpenMenu,
-    resetDragState,
     toggleAddingPoints,
     toggleAddingCurves,
     toggleAddingText,
@@ -240,7 +238,7 @@ export const ChartContainer = () => {
     } else if (isAddingText && event) {
       // Get the SVG element position to calculate correct screen coordinates
       const svgElement = event.currentTarget;
-      const containerRect = svgElement.getBoundingClientRect();
+      const _containerRect = svgElement.getBoundingClientRect();
 
       // Add new text directly
       addText(x, y, "Novo texto");
@@ -329,7 +327,7 @@ export const ChartContainer = () => {
     }
   };
 
-  const handleTextChange = (textId: string, newContent: string) => {
+  const handleTextChange = (_textId: string, _newContent: string) => {
     // Don't update content in real-time to avoid cursor issues
     // Content will be updated when editing ends
   };
@@ -395,7 +393,7 @@ export const ChartContainer = () => {
         });
       }
     }
-  }, [editingText]); // Remove textStyleMenu from dependencies
+  }, [editingText, textStyleMenu]); // Remove textStyleMenu from dependencies
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDeletingLines) {
@@ -501,12 +499,16 @@ export const ChartContainer = () => {
     const tooltipElements = cleanSVG.querySelectorAll(
       '[title*="tooltip"], [aria-label*="tooltip"]',
     );
-    tooltipElements.forEach((el) => el.remove());
+    tooltipElements.forEach((el) => {
+      el.remove();
+    });
 
     // Remove any elements with class containing "tooltip"
     const tooltipClassElements =
       cleanSVG.querySelectorAll('[class*="tooltip"]');
-    tooltipClassElements.forEach((el) => el.remove());
+    tooltipClassElements.forEach((el) => {
+      el.remove();
+    });
 
     // Remove any text elements that might be tooltips (usually small text)
     const tooltipTextElements = cleanSVG.querySelectorAll("text");
@@ -589,7 +591,9 @@ export const ChartContainer = () => {
     const invisibleLines = cleanSVG.querySelectorAll(
       'line[stroke="transparent"], line[stroke="rgba(0,0,0,0)"]',
     );
-    invisibleLines.forEach((el) => el.remove());
+    invisibleLines.forEach((el) => {
+      el.remove();
+    });
 
     // Clean up any empty style attributes
     const elementsWithStyle = cleanSVG.querySelectorAll("[style]");
@@ -658,7 +662,7 @@ export const ChartContainer = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} />
+      <Header />
 
       <div className="flex h-[calc(100vh-64px)]">
         <Sidebar
@@ -710,6 +714,8 @@ export const ChartContainer = () => {
           <div
             className="flex-1 flex items-center justify-center p-8 relative"
             onMouseMove={handleMouseMove}
+            role="application"
+            aria-label="Área do gráfico"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -727,7 +733,7 @@ export const ChartContainer = () => {
                 onTextClick={handleTextClick}
                 onTextEdit={handleTextEdit}
                 onTextChange={handleTextChange}
-                onTextEditEnd={(textId, finalContent) =>
+                onTextEditEnd={(_textId, finalContent) =>
                   handleTextEditEnd(finalContent)
                 }
                 onTextDragStart={handleTextDragStart}

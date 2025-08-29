@@ -36,10 +36,8 @@ export const Sidebar = ({
   onToggleAddingCurves,
   onToggleAddingText,
   onToggleDeletingLines,
-  onClearChart,
   onLineColorChange,
   onLineStyleChange,
-  onStartNewLine,
   onLineHover,
   onLinePreviewStyle,
   onLinePreviewColor,
@@ -50,7 +48,6 @@ export const Sidebar = ({
   lines,
   texts,
   onTextClick,
-  onTextDelete,
 }: SidebarProps) => {
   const [showLineStyleMenu, setShowLineStyleMenu] = useState<string | null>(
     null,
@@ -220,7 +217,9 @@ export const Sidebar = ({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  aria-label="Texto"
                 >
+                  <title>Texto</title>
                   <line x1="17" y1="10" x2="3" y2="10" />
                   <line x1="21" y1="6" x2="3" y2="6" />
                   <line x1="21" y1="14" x2="3" y2="14" />
@@ -241,7 +240,8 @@ export const Sidebar = ({
 
       {/* Line Style Menu Backdrop */}
       {showLineStyleMenu && (
-        <div
+        <button
+          type="button"
           className="fixed inset-0 z-40"
           onClick={handleBackdropClick}
           onKeyDown={(e) => {
@@ -249,8 +249,7 @@ export const Sidebar = ({
               handleBackdropClick();
             }
           }}
-          role="button"
-          tabIndex={-1}
+          aria-label="Fechar menu de estilo"
         />
       )}
     </motion.div>

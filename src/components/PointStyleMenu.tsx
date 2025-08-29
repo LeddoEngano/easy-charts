@@ -52,7 +52,6 @@ export const PointStyleMenu = ({
   y,
   currentStyle,
   currentLabel,
-  pointId,
   onStyleChange,
   onLabelChange,
   onPreviewStyle,
@@ -87,11 +86,15 @@ export const PointStyleMenu = ({
       <div className="space-y-3">
         {/* Label editing section */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">
+          <label
+            htmlFor="point-label"
+            className="text-sm font-medium text-gray-300"
+          >
             Nome do Ponto
           </label>
           <div className="flex gap-2">
             <input
+              id="point-label"
               type="text"
               value={labelInput}
               onChange={(e) => handleLabelChange(e.target.value)}
@@ -100,6 +103,7 @@ export const PointStyleMenu = ({
             />
             {currentLabel && (
               <button
+                type="button"
                 onClick={handleRemoveLabel}
                 className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
                 title="Remover nome"
@@ -112,12 +116,13 @@ export const PointStyleMenu = ({
 
         {/* Style options section */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">
+          <div className="text-sm font-medium text-gray-300">
             Estilo do Ponto
-          </label>
+          </div>
           <div className="space-y-1">
             {styleOptions.map((option) => (
               <button
+                type="button"
                 key={option.value}
                 onClick={() => onStyleChange(option.value)}
                 onMouseEnter={() => onPreviewStyle(option.value)}

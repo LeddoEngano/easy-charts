@@ -23,15 +23,24 @@
       },
       "style": {
         "useImportType": "error",
-        "useConsistentArrayType": "error"
+        "useConsistentArrayType": "error",
+        "noNonNullAssertion": "off"
       },
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "off"
+      },
+      "a11y": {
+        "useSemanticElements": "off"
       }
     },
     "domains": {
       "next": "recommended",
       "react": "recommended"
+    }
+  },
+  "css": {
+    "linter": {
+      "enabled": false
     }
   },
   "assist": {

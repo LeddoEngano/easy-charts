@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { CodeBlock } from "@/components/ui/code-block";
-import type { ChartData, LineStyle } from "@/types/chart";
+import type { ChartData } from "@/types/chart";
 import type { AxesMode } from "./Toolbar";
 
 interface CodeDrawerProps {

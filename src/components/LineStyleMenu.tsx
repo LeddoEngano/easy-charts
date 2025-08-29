@@ -96,7 +96,6 @@ export const LineStyleMenu = ({
   y,
   currentColor,
   currentStyle,
-  lineId,
   onColorChange,
   onStyleChange,
   onPreviewStyle,
@@ -129,7 +128,10 @@ export const LineStyleMenu = ({
       <div className="space-y-4">
         {/* Color selection section */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">
+          <label
+            htmlFor="line-color-input"
+            className="text-sm font-medium text-gray-300"
+          >
             Cor da Linha
           </label>
 
@@ -137,6 +139,7 @@ export const LineStyleMenu = ({
           <div className="grid grid-cols-4 gap-2">
             {quickColors.map((color) => (
               <button
+                type="button"
                 key={color}
                 onClick={() => onColorChange(color)}
                 onMouseEnter={() => onPreviewColor(color)}
@@ -166,6 +169,7 @@ export const LineStyleMenu = ({
               title="Escolher cor"
             />
             <input
+              id="line-color-input"
               type="text"
               value={colorInput}
               onChange={(e) =>
@@ -189,12 +193,13 @@ export const LineStyleMenu = ({
 
         {/* Style options section */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">
+          <div className="text-sm font-medium text-gray-300">
             Estilo da Linha
-          </label>
+          </div>
           <div className="space-y-1">
             {styleOptions.map((option) => (
               <button
+                type="button"
                 key={option.value}
                 onClick={() => onStyleChange(option.value)}
                 onMouseEnter={() => onPreviewStyle(option.value)}
@@ -202,7 +207,7 @@ export const LineStyleMenu = ({
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
                   currentStyle === option.value
                     ? "bg-blue-600 text-white"
-                    : "text-gray-300 hover:bg-gray-700"
+                    : "text-gray-700"
                 }`}
               >
                 <div className="flex items-center justify-center w-8 h-4">

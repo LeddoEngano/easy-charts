@@ -40,7 +40,7 @@ export const useChart = () => {
   const [isAddingText, setIsAddingText] = useState(false);
   const [draggedPointId, setDraggedPointId] = useState<string | null>(null);
   const [draggedTextId, setDraggedTextId] = useState<string | null>(null);
-  const [currentColor, setCurrentColor] = useState("#3b82f6"); // Default blue
+  const [currentColor, _setCurrentColor] = useState("#3b82f6"); // Default blue
   const [isNewLineMode, setIsNewLineMode] = useState(false);
   const [hoveredLineId, setHoveredLineId] = useState<string | null>(null);
   const [isDeletingLines, setIsDeletingLines] = useState(false);
@@ -61,7 +61,7 @@ export const useChart = () => {
   } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [actuallyDragged, setActuallyDragged] = useState(false);
-  const [dragMoveCount, setDragMoveCount] = useState(0);
+  const [_dragMoveCount, setDragMoveCount] = useState(0);
   const [axesMode, setAxesMode] = useState<AxesMode>("off");
   const [showGrid, setShowGrid] = useState(true);
 
@@ -124,31 +124,6 @@ export const useChart = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(chartData));
   }, [chartData]);
 
-  // Save current state to history
-  const saveToHistory = useCallback((data: ChartData) => {
-    setHistory((prevHistory) => {
-      // Create new history array - always add to the end
-      const newHistory = [...prevHistory];
-
-      // Add new state
-      newHistory.push(JSON.parse(JSON.stringify(data))); // Deep clone
-      // Limit history size to prevent memory issues
-      const maxHistorySize = 100;
-      if (newHistory.length > maxHistorySize) {
-        // Remove oldest entries but keep at least 10
-        const toRemove = newHistory.length - maxHistorySize;
-        newHistory.splice(0, toRemove);
-      }
-
-      return newHistory;
-    });
-    setHistoryIndex((prev) => {
-      const newIndex = prev + 1;
-      historyIndexRef.current = newIndex;
-      return newIndex;
-    });
-  }, []);
-
   // Update refs when states change
   useEffect(() => {
     historyIndexRef.current = historyIndex;
@@ -166,13 +141,15 @@ export const useChart = () => {
       historyIndexRef.current = 0;
       setHasInitialSave(true);
     }
-  }, [isInitialized, shouldSaveHistory, hasInitialSave]); // Removed chartData to prevent infinite loop
+  }, [isInitialized, shouldSaveHistory, hasInitialSave, chartData]); // Removed chartData to prevent infinite loop
+
+  // Use a ref to track the previous chartData to avoid unnecessary saves
+  const prevChartDataRef = useRef<ChartData | null>(null);
 
   // Save to history when chart data changes (but not during undo/redo)
   useEffect(() => {
-    // Check if this is an undo/redo action - use a more robust approach
+    // Check if this is an undo/redo action
     if (isUndoRedoActionRef.current) {
-      // Only reset the ref here, don't reset the state yet to avoid timing issues
       isUndoRedoActionRef.current = false;
       return;
     }
@@ -182,10 +159,38 @@ export const useChart = () => {
       return;
     }
 
-    // Save user actions directly without calling saveUserAction to avoid dependency loop
+    // Don't save if chartData hasn't actually changed
+    if (
+      prevChartDataRef.current &&
+      JSON.stringify(prevChartDataRef.current) === JSON.stringify(chartData)
+    ) {
+      return;
+    }
+
+    // Update the ref with current data
+    prevChartDataRef.current = JSON.parse(JSON.stringify(chartData));
+
+    // Save user actions
     if (historyIndex === history.length - 1) {
       // At the end of history - add normally
-      saveToHistory(chartData);
+      setHistory((prevHistory) => {
+        const newHistory = [...prevHistory];
+        newHistory.push(JSON.parse(JSON.stringify(chartData)));
+
+        // Limit history size to prevent memory issues
+        const maxHistorySize = 100;
+        if (newHistory.length > maxHistorySize) {
+          const toRemove = newHistory.length - maxHistorySize;
+          newHistory.splice(0, toRemove);
+        }
+
+        return newHistory;
+      });
+      setHistoryIndex((prev) => {
+        const newIndex = prev + 1;
+        historyIndexRef.current = newIndex;
+        return newIndex;
+      });
     } else {
       // In the middle of history - create new branch
       setHistory((prevHistory) => {
@@ -199,7 +204,7 @@ export const useChart = () => {
         return newIndex;
       });
     }
-  }, [chartData, hasInitialSave]); // Only depend on chartData and hasInitialSave
+  }, [chartData, hasInitialSave, historyIndex, history.length]);
 
   // Get next color for new lines based on current line count
   const getNextColor = useCallback((currentLineCount: number) => {
@@ -288,7 +293,7 @@ export const useChart = () => {
         };
       });
     },
-    [isNewLineMode, currentColor, getNextColor],
+    [isNewLineMode, getNextColor],
   );
 
   // Add point by click coordinates (for chart click)
@@ -751,16 +756,19 @@ export const useChart = () => {
   }, []);
 
   // Update point style
-  const updatePointStyle = useCallback((pointId: string, style: PointStyle) => {
-    setChartData((prev) => ({
-      ...prev,
-      points: prev.points.map((point) =>
-        point.id === pointId ? { ...point, style } : point,
-      ),
-    }));
-    closePointStyleMenu();
-    setActuallyDragged(false); // Reset drag state after menu interaction
-  }, []);
+  const updatePointStyle = useCallback(
+    (pointId: string, style: PointStyle) => {
+      setChartData((prev) => ({
+        ...prev,
+        points: prev.points.map((point) =>
+          point.id === pointId ? { ...point, style } : point,
+        ),
+      }));
+      closePointStyleMenu();
+      setActuallyDragged(false); // Reset drag state after menu interaction
+    },
+    [closePointStyleMenu],
+  );
 
   // Update point label
   const updatePointLabel = useCallback((pointId: string, label?: string) => {
