@@ -951,7 +951,6 @@ export const Chart = ({
                         delay: 0.2,
                       }}
                       style={{
-                        strokeDasharray: isAddingCurves ? "5,5" : undefined,
                         filter: isHovered
                           ? "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))"
                           : "none",

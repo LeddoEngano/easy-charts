@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import type { ChartData, Line, Point, PointStyle, Text } from "@/types/chart";
 import type { AxesMode } from "@/components/Toolbar";
 
@@ -57,6 +57,16 @@ export const useChart = () => {
   const [axesMode, setAxesMode] = useState<AxesMode>("off");
   const [showGrid, setShowGrid] = useState(true);
 
+  // Undo/Redo system
+  const [history, setHistory] = useState<ChartData[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isUndoRedoAction, setIsUndoRedoAction] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [shouldSaveHistory, setShouldSaveHistory] = useState(false);
+  const [hasInitialSave, setHasInitialSave] = useState(false);
+  const historyIndexRef = useRef(historyIndex);
+  const isUndoRedoActionRef = useRef(false);
+
   // Load data from localStorage only on client side
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -70,9 +80,37 @@ export const useChart = () => {
           texts: parsedData.texts || [],
         };
         setChartData(chartData);
+
+        // Initialize history with the loaded data
+        console.log('Initializing history with loaded data:', chartData);
+        setHistory([chartData]);
+        setHistoryIndex(0);
+        historyIndexRef.current = 0;
+        setIsInitialized(true);
+        // Enable history saving after a short delay to avoid saving initial state
+        setTimeout(() => setShouldSaveHistory(true), 100);
       } catch (error) {
         console.warn("Failed to parse saved chart data:", error);
+        // Initialize with empty state if loading fails
+        const emptyState: ChartData = { points: [], lines: [], texts: [] };
+        console.log('Initializing history with empty state (loading failed)');
+        setHistory([emptyState]);
+        setHistoryIndex(0);
+        historyIndexRef.current = 0;
+        setIsInitialized(true);
+        // Enable history saving after a short delay to avoid saving initial state
+        setTimeout(() => setShouldSaveHistory(true), 100);
       }
+    } else {
+      // Initialize with empty state if no saved data
+      const emptyState: ChartData = { points: [], lines: [], texts: [] };
+      console.log('Initializing history with empty state (no saved data)');
+      setHistory([emptyState]);
+      setHistoryIndex(0);
+      historyIndexRef.current = 0;
+      setIsInitialized(true);
+      // Enable history saving after a short delay to avoid saving initial state
+      setTimeout(() => setShouldSaveHistory(true), 100);
     }
   }, []);
 
@@ -80,6 +118,118 @@ export const useChart = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(chartData));
   }, [chartData]);
+
+  // Save current state to history
+  const saveToHistory = useCallback((data: ChartData) => {
+    console.log('saveToHistory called - current historyIndex:', historyIndexRef.current);
+    setHistory((prevHistory) => {
+      console.log('Previous history length:', prevHistory.length);
+
+      // Create new history array - always add to the end
+      const newHistory = [...prevHistory];
+
+      // Add new state
+      newHistory.push(JSON.parse(JSON.stringify(data))); // Deep clone
+      console.log('Added new state, new length:', newHistory.length);
+
+      // Limit history size to prevent memory issues
+      const maxHistorySize = 100;
+      if (newHistory.length > maxHistorySize) {
+        // Remove oldest entries but keep at least 10
+        const toRemove = newHistory.length - maxHistorySize;
+        newHistory.splice(0, toRemove);
+        console.log('Limited history size, removed:', toRemove, 'entries');
+      }
+
+      return newHistory;
+    });
+    setHistoryIndex((prev) => {
+      const newIndex = prev + 1;
+      historyIndexRef.current = newIndex;
+      console.log('History index updated to:', newIndex);
+      return newIndex;
+    });
+  }, []);
+
+  // Function to save user actions (called from UI interactions)
+  const saveUserAction = useCallback((data: ChartData) => {
+    console.log('saveUserAction called');
+    // Only save if we're at the end of history
+    if (historyIndex === history.length - 1) {
+      saveToHistory(data);
+    } else {
+      // If we're not at the end, create a new branch
+      setHistory((prevHistory) => {
+        const newHistory = prevHistory.slice(0, historyIndex + 1);
+        newHistory.push(JSON.parse(JSON.stringify(data)));
+        return newHistory;
+      });
+      setHistoryIndex((prev) => {
+        const newIndex = prev + 1;
+        historyIndexRef.current = newIndex;
+        return newIndex;
+      });
+    }
+  }, [historyIndex, history.length]); // Removed saveToHistory to prevent dependency loop
+
+  // Update refs when states change
+  useEffect(() => {
+    historyIndexRef.current = historyIndex;
+  }, [historyIndex]);
+
+  useEffect(() => {
+    isUndoRedoActionRef.current = isUndoRedoAction;
+  }, [isUndoRedoAction]);
+
+  // Initialize history with current state
+  useEffect(() => {
+    if (isInitialized && shouldSaveHistory && !hasInitialSave) {
+      console.log('Initializing history with current state...');
+      setHistory([JSON.parse(JSON.stringify(chartData))]);
+      setHistoryIndex(0);
+      historyIndexRef.current = 0;
+      setHasInitialSave(true);
+      console.log('History initialized successfully');
+    }
+  }, [isInitialized, shouldSaveHistory, hasInitialSave]); // Removed chartData to prevent infinite loop
+
+  // Save to history when chart data changes (but not during undo/redo)
+  useEffect(() => {
+    console.log('Chart data changed - isUndoRedoAction:', isUndoRedoAction, 'isUndoRedoActionRef:', isUndoRedoActionRef.current, 'hasInitialSave:', hasInitialSave);
+
+    // Check if this is an undo/redo action - use a more robust approach
+    if (isUndoRedoActionRef.current) {
+      console.log('UNDO/REDO DETECTED - NOT SAVING TO HISTORY');
+      // Only reset the ref here, don't reset the state yet to avoid timing issues
+      isUndoRedoActionRef.current = false;
+      return;
+    }
+
+    // Don't save if history hasn't been initialized yet
+    if (!hasInitialSave) {
+      console.log('History not initialized yet, skipping save');
+      return;
+    }
+
+    // Save user actions directly without calling saveUserAction to avoid dependency loop
+    console.log('Saving user action to history...');
+    if (historyIndex === history.length - 1) {
+      // At the end of history - add normally
+      saveToHistory(chartData);
+    } else {
+      // In the middle of history - create new branch
+      setHistory((prevHistory) => {
+        const newHistory = prevHistory.slice(0, historyIndex + 1);
+        newHistory.push(JSON.parse(JSON.stringify(chartData)));
+        return newHistory;
+      });
+      setHistoryIndex((prev) => {
+        const newIndex = prev + 1;
+        historyIndexRef.current = newIndex;
+        return newIndex;
+      });
+    }
+  }, [chartData, hasInitialSave]); // Only depend on chartData and hasInitialSave
 
   // Get next color for new lines based on current line count
   const getNextColor = useCallback((currentLineCount: number) => {
@@ -280,6 +430,8 @@ export const useChart = () => {
   // Update point position (for dragging)
   const updatePointPosition = useCallback(
     (pointId: string, x: number, y: number) => {
+      console.log('updatePointPosition called:', pointId, x, y);
+
       setDragMoveCount((prev) => {
         const newCount = prev + 1;
 
@@ -340,6 +492,7 @@ export const useChart = () => {
 
   // Stop dragging
   const stopDragging = useCallback(() => {
+    console.log('stopDragging called');
     setDraggedPointId(null);
     setDragStartPosition(null);
     setIsDragging(false);
@@ -596,6 +749,98 @@ export const useChart = () => {
     setShowGrid((prev) => !prev);
   }, []);
 
+  // Undo function
+  const undo = useCallback(() => {
+    console.log('=== UNDO CALLED ===');
+    console.log('Current state - historyIndex:', historyIndex, 'history.length:', history.length);
+    console.log('History states:', history.map((_, i) => `State ${i}`));
+    console.log('Can undo check:', historyIndex > 0);
+
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const previousState = history[newIndex];
+
+      console.log('Undo - newIndex:', newIndex, 'previousState exists:', !!previousState);
+
+      if (previousState) {
+        console.log('Executing undo - navigating to state:', newIndex);
+
+        // Set undo/redo flag BEFORE any state changes
+        isUndoRedoActionRef.current = true;
+        setIsUndoRedoAction(true);
+
+        // Update history index and chart data in sequence
+        setHistoryIndex(newIndex);
+        setChartData(JSON.parse(JSON.stringify(previousState)));
+
+        console.log('Undo completed successfully - new index:', newIndex);
+      } else {
+        console.log('Undo failed - previousState is null/undefined');
+      }
+    } else {
+      console.log('Undo blocked - no previous state available');
+    }
+  }, [historyIndex, history]);
+
+  // Redo function
+  const redo = useCallback(() => {
+    console.log('=== REDO CALLED ===');
+    console.log('Current state - historyIndex:', historyIndex, 'history.length:', history.length);
+    console.log('History states:', history.map((_, i) => `State ${i}`));
+    console.log('Can redo check:', historyIndex < history.length - 1);
+
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      const nextState = history[newIndex];
+
+      console.log('Redo - newIndex:', newIndex, 'nextState exists:', !!nextState);
+
+      if (nextState) {
+        console.log('Executing redo - navigating to state:', newIndex);
+
+        // Set undo/redo flag BEFORE any state changes
+        isUndoRedoActionRef.current = true;
+        setIsUndoRedoAction(true);
+
+        // Update history index and chart data in sequence
+        setHistoryIndex(newIndex);
+        setChartData(JSON.parse(JSON.stringify(nextState)));
+
+        console.log('Redo completed successfully - new index:', newIndex);
+      } else {
+        console.log('Redo failed - nextState is null/undefined');
+      }
+    } else {
+      console.log('Redo blocked - no next state available');
+    }
+  }, [historyIndex, history]);
+
+  // Check if undo/redo are available
+  const canUndo = historyIndex > 0; // Need at least 1 state to undo
+  const canRedo = historyIndex < history.length - 1;
+
+  // Debug logging for undo/redo state
+  const debugHistoryState = useCallback(() => {
+    console.log('=== HISTORY DEBUG ===');
+    console.log('History Index:', historyIndex);
+    console.log('History Length:', history.length);
+    console.log('Can Undo:', canUndo);
+    console.log('Can Redo:', canRedo);
+    console.log('History States:', history.map((_, i) => `State ${i}`));
+    console.log('Current State:', historyIndex >= 0 && historyIndex < history.length ? `State ${historyIndex}` : 'Invalid');
+    console.log('===================');
+  }, [historyIndex, history.length, canUndo, canRedo, history]);
+
+  // Debug logging for undo/redo state (only when there are actions)
+  if (history.length > 0) {
+    console.log('Undo/Redo state:', {
+      historyIndex,
+      historyLength: history.length,
+      canUndo,
+      canRedo
+    });
+  }
+
   return {
     chartData,
     isAddingPoints,
@@ -646,5 +891,10 @@ export const useChart = () => {
     loadChartData,
     setAxesModeHandler,
     toggleGrid,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    debugHistoryState,
   };
 };

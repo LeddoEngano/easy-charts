@@ -65,9 +65,53 @@ export const ChartContainer = () => {
     updatePointStyle,
     setAxesModeHandler,
     toggleGrid,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useChart();
 
   const [isCodeDrawerOpen, setIsCodeDrawerOpen] = useState(false);
+
+  // Keyboard event listener for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      console.log('Key pressed:', event.key, 'Ctrl:', event.ctrlKey, 'Meta:', event.metaKey, 'Shift:', event.shiftKey);
+
+      // Check if Ctrl+Z (Windows/Linux) or Cmd+Z (Mac) is pressed
+      if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+        console.log('Undo/Redo key combination detected');
+        event.preventDefault();
+
+        // Check if Shift is also pressed for redo (Ctrl+Shift+Z or Cmd+Shift+Z)
+        if (event.shiftKey) {
+          console.log('Redo attempt - canRedo:', canRedo);
+          if (canRedo) {
+            redo();
+          }
+        } else {
+          console.log('Undo attempt - canUndo:', canUndo);
+          if (canUndo) {
+            undo();
+          }
+        }
+      }
+
+      // Also support Ctrl+Y for redo (Windows/Linux)
+      if ((event.ctrlKey || event.metaKey) && event.key === 'y') {
+        console.log('Ctrl+Y detected - canRedo:', canRedo);
+        event.preventDefault();
+        if (canRedo) {
+          redo();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [undo, redo, canUndo, canRedo]);
 
   // Canvas interaction hook
   const canvasInteraction = useCanvasInteraction({
@@ -610,7 +654,12 @@ export const ChartContainer = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+      />
 
       <div className="flex h-[calc(100vh-64px)]">
         <Sidebar

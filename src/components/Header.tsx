@@ -4,8 +4,16 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { FaXTwitter } from "react-icons/fa6";
 import { FaInstagram } from "react-icons/fa";
+import { FiRotateCcw, FiRotateCw } from "react-icons/fi";
 
-export const Header = () => {
+interface HeaderProps {
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+}
+
+export const Header = ({ onUndo, onRedo, canUndo = false, canRedo = false }: HeaderProps) => {
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
@@ -46,6 +54,35 @@ export const Header = () => {
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
+            {/* Undo/Redo Buttons */}
+            <div className="flex items-center gap-1">
+              {/* Undo Button */}
+              <button
+                onClick={onUndo}
+                disabled={!canUndo}
+                className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 group border ${canUndo
+                    ? "bg-gray-800 hover:bg-gray-700 text-white border-gray-600 hover:scale-105"
+                    : "bg-gray-900 text-gray-500 border-gray-700 cursor-not-allowed"
+                  }`}
+                title="Desfazer (Ctrl+Z)"
+              >
+                <FiRotateCcw className="w-4 h-4" />
+              </button>
+
+              {/* Redo Button */}
+              <button
+                onClick={onRedo}
+                disabled={!canRedo}
+                className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 group border ${canRedo
+                    ? "bg-gray-800 hover:bg-gray-700 text-white border-gray-600 hover:scale-105"
+                    : "bg-gray-900 text-gray-500 border-gray-700 cursor-not-allowed"
+                  }`}
+                title="Refazer (Ctrl+Shift+Z)"
+              >
+                <FiRotateCw className="w-4 h-4" />
+              </button>
+            </div>
+
             {/* X (Twitter) Button */}
             <a
               href="https://x.com/leddo_401"
