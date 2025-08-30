@@ -1298,7 +1298,7 @@ export const Chart = ({
               style={{ cursor: "pointer" }}
               role="button"
               tabIndex={0}
-                                aria-label={`Edit text: ${text.content}`}
+              aria-label={`Edit text: ${text.content}`}
               onMouseUp={(e) => {
                 e.stopPropagation(); // Prevent event from bubbling to canvas
 

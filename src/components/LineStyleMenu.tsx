@@ -193,9 +193,7 @@ export const LineStyleMenu = ({
 
         {/* Style options section */}
         <div className="space-y-2">
-          <div className="text-sm font-medium text-gray-300">
-            Line Style
-          </div>
+          <div className="text-sm font-medium text-gray-300">Line Style</div>
           <div className="space-y-1">
             {styleOptions.map((option) => (
               <button
