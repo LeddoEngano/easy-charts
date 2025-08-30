@@ -1,5 +1,10 @@
+
 <div align="center">
   <img src="https://rbvesetvqkizggncjbwr.supabase.co/storage/v1/object/public/media/images/ez-charts/ez-charts-logo.webp" alt="Easy Charts Logo" width="200" height="200">
+  
+<div align="center">
+  <a href="https://www.producthunt.com/products/ezcharts?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-ezcharts" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1010933&theme=light&t=1756567059558" alt="EzCharts - Create&#0032;beautiful&#0032;animated&#0032;charts&#0032;with&#0032;zero&#0032;data&#0032;requirements | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+</div>
   
   # Ez Charts [![GitHub stars](https://img.shields.io/github/stars/LeddoEngano/ez-charts?style=social)](https://github.com/LeddoEngano/ez-charts/stargazers)
   
