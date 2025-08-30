@@ -26,6 +26,7 @@ export const Header = () => {
                 src="/ez-charts-logo.webp"
                 alt="Easy Charts Logo"
                 fill
+                sizes="52px"
                 className="object-contain"
                 priority
               />
