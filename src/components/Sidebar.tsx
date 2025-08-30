@@ -75,7 +75,7 @@ export const Sidebar = ({
             ? "bg-ez-500 text-ez-900 shadow-lg"
             : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
         }`}
-        title="Adicionar Pontos"
+        title="Add Points"
       >
         <CgAdd size={20} />
       </motion.button>
@@ -93,7 +93,7 @@ export const Sidebar = ({
               ? "bg-gray-800 text-gray-500 cursor-not-allowed"
               : "bg-gray-800 text-gray-300 cursor-pointer hover:bg-gray-700 hover:text-white"
         }`}
-        title="Adicionar Curvas"
+        title="Add Curves"
       >
         <TbEaseInOutControlPoints />
       </motion.button>
@@ -108,7 +108,7 @@ export const Sidebar = ({
             ? "bg-blue-500 text-white shadow-lg"
             : "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
         }`}
-        title="Adicionar Texto"
+        title="Add Text"
       >
         <RxText />
       </motion.button>
@@ -123,7 +123,7 @@ export const Sidebar = ({
             ? "bg-red-500 text-white shadow-lg"
             : "bg-gray-800 text-gray-300 cursor-pointer hover:bg-red-600 hover:text-white"
         }`}
-        title="Excluir Elementos"
+        title="Delete Elements"
       >
         <MdDeleteOutline />
       </motion.button>
@@ -159,7 +159,7 @@ export const Sidebar = ({
                 onMouseLeave={() => onLineHover(null)}
                 className="w-10 h-10 cursor-pointer rounded-lg flex items-center justify-center text-xs font-medium relative"
                 style={{ backgroundColor: line.color }}
-                title={`Linha ${index + 1} - Clique para configurar`}
+                title={`Line ${index + 1} - Click to configure`}
               >
                 {index + 1}
               </motion.button>
@@ -206,7 +206,7 @@ export const Sidebar = ({
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onTextClick?.(text)}
                 className="w-10 h-10 cursor-pointer rounded-lg flex items-center justify-center text-xs font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-600"
-                title={`Texto: "${text.content}" - Clique para editar`}
+                title={`Text: "${text.content}" - Click to edit`}
               >
                 <svg
                   width="16"
@@ -217,9 +217,9 @@ export const Sidebar = ({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  aria-label="Texto"
+                  aria-label="Text"
                 >
-                  <title>Texto</title>
+                                      <title>Text</title>
                   <line x1="17" y1="10" x2="3" y2="10" />
                   <line x1="21" y1="6" x2="3" y2="6" />
                   <line x1="21" y1="14" x2="3" y2="14" />
@@ -249,7 +249,7 @@ export const Sidebar = ({
               handleBackdropClick();
             }
           }}
-          aria-label="Fechar menu de estilo"
+          aria-label="Close style menu"
         />
       )}
     </motion.div>

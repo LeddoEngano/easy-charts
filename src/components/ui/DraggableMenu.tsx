@@ -91,9 +91,9 @@ export function DraggableMenu({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-              aria-label="Fechar menu"
+              aria-label="Close menu"
             >
-              <title>Fechar menu</title>
+              <title>Close menu</title>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -118,7 +118,7 @@ export function DraggableMenu({
             onClose();
           }
         }}
-        aria-label="Fechar menu"
+        aria-label="Close menu"
       />
     </>
   );

@@ -23,9 +23,9 @@ const styleOptions: Array<{
   label: string;
   preview: string | React.ReactNode;
 }> = [
-  { value: "default", label: "Padrão", preview: "●" },
-  { value: "border", label: "Borda", preview: "◉" },
-  { value: "hollow", label: "Vazio", preview: "○" },
+  { value: "default", label: "Default", preview: "●" },
+  { value: "border", label: "Border", preview: "◉" },
+  { value: "hollow", label: "Hollow", preview: "○" },
   { value: "glow", label: "Glow", preview: "✨" },
   {
     value: "radar",
@@ -41,7 +41,7 @@ const styleOptions: Array<{
   },
   {
     value: "hidden",
-    label: "Oculto",
+    label: "Hidden",
     preview: <MdVisibilityOff className="text-lg" />,
   },
 ];
@@ -78,7 +78,7 @@ export const PointStyleMenu = ({
 
   return (
     <DraggableMenu
-      title="Configurações do Ponto"
+      title="Point Settings"
       x={x + 10}
       y={y - 100}
       onClose={onClose}
@@ -90,7 +90,7 @@ export const PointStyleMenu = ({
             htmlFor="point-label"
             className="text-sm font-medium text-gray-300"
           >
-            Nome do Ponto
+            Point Name
           </label>
           <div className="flex gap-2">
             <input
@@ -98,7 +98,7 @@ export const PointStyleMenu = ({
               type="text"
               value={labelInput}
               onChange={(e) => handleLabelChange(e.target.value)}
-              placeholder="Digite o nome..."
+              placeholder="Type the name..."
               className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {currentLabel && (
@@ -106,7 +106,7 @@ export const PointStyleMenu = ({
                 type="button"
                 onClick={handleRemoveLabel}
                 className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
-                title="Remover nome"
+                title="Remove name"
               >
                 ✕
               </button>
@@ -117,7 +117,7 @@ export const PointStyleMenu = ({
         {/* Style options section */}
         <div className="space-y-2">
           <div className="text-sm font-medium text-gray-300">
-            Estilo do Ponto
+            Point Style
           </div>
           <div className="space-y-1">
             {styleOptions.map((option) => (

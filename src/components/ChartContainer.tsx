@@ -241,7 +241,7 @@ export const ChartContainer = () => {
       const _containerRect = svgElement.getBoundingClientRect();
 
       // Add new text directly
-      addText(x, y, "Novo texto");
+      addText(x, y, "New text");
     }
   };
 
@@ -430,7 +430,7 @@ export const ChartContainer = () => {
         break;
       case "gif":
         // TODO: Implement GIF download
-        alert("Download de GIF será implementado em breve!");
+        alert("GIF download will be implemented soon!");
         break;
     }
   };
@@ -715,7 +715,7 @@ export const ChartContainer = () => {
             className="flex-1 flex items-center justify-center p-8 relative"
             onMouseMove={handleMouseMove}
             role="application"
-            aria-label="Área do gráfico"
+            aria-label="Chart area"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -780,7 +780,7 @@ export const ChartContainer = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   role="img"
-                  aria-label="Excluir linha"
+                  aria-label="Delete line"
                 >
                   <path d="M3 6h18" />
                   <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />

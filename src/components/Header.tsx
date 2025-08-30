@@ -70,7 +70,7 @@ export const Header = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-10 h-10 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 group border border-gray-600"
-              title="Siga-nos no X"
+              title="Follow us on X"
             >
               <FaXTwitter className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
             </a>
@@ -81,7 +81,7 @@ export const Header = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center w-10 h-10 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 group border border-gray-600"
-              title="Siga-nos no Instagram"
+              title="Follow us on Instagram"
             >
               <FaInstagram className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
             </a>

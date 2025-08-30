@@ -121,7 +121,7 @@ export function TextStyleMenu({
 
   return (
     <DraggableMenu
-      title="Estilo do Texto"
+      title="Text Style"
       x={x}
       y={y}
       onClose={onClose}
@@ -133,7 +133,7 @@ export function TextStyleMenu({
           htmlFor="text-content"
           className="block text-xs text-gray-300 mb-1"
         >
-          Conteúdo
+          Content
         </label>
         <input
           id="text-content"
@@ -145,14 +145,14 @@ export function TextStyleMenu({
             onUpdateText(text.id, { content: newContent });
           }}
           className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
-          placeholder="Digite o conteúdo do texto..."
+          placeholder="Type the text content..."
           autoComplete="off"
           spellCheck={false}
           autoCorrect="off"
           autoCapitalize="off"
         />
         <p className="text-xs text-gray-400 mt-1">
-          Edite o conteúdo diretamente aqui
+          Edit the content directly here
         </p>
       </div>
 
@@ -162,7 +162,7 @@ export function TextStyleMenu({
           onClick={() => handleStyleChange("bold")}
           variant={isBold ? "default" : "secondary"}
           size="sm"
-          title="Negrito"
+          title="Bold"
           className="px-3 py-1 text-xs font-bold"
         >
           B
@@ -171,7 +171,7 @@ export function TextStyleMenu({
           onClick={() => handleStyleChange("italic")}
           variant={isItalic ? "default" : "secondary"}
           size="sm"
-          title="Itálico"
+          title="Italic"
           className="px-3 py-1 text-xs italic"
         >
           I
@@ -180,7 +180,7 @@ export function TextStyleMenu({
           onClick={() => handleStyleChange("underline")}
           variant={isUnderline ? "default" : "secondary"}
           size="sm"
-          title="Sublinhado"
+          title="Underline"
           className="px-3 py-1 text-xs underline"
         >
           U
@@ -193,7 +193,7 @@ export function TextStyleMenu({
           htmlFor="font-family"
           className="block text-xs text-gray-300 mb-1"
         >
-          Fonte
+          Font
         </label>
         <select
           id="font-family"
@@ -212,7 +212,7 @@ export function TextStyleMenu({
       {/* Font Size */}
       <div className="mb-3">
         <label htmlFor="font-size" className="block text-xs text-gray-300 mb-1">
-          Tamanho
+          Size
         </label>
         <div className="flex items-center gap-2">
           <input
@@ -235,14 +235,14 @@ export function TextStyleMenu({
 
       {/* Color */}
       <div className="mb-3">
-        <div className="block text-xs text-gray-300 mb-1">Cor</div>
+        <div className="block text-xs text-gray-300 mb-1">Color</div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
             className="w-8 h-8 rounded border-2 border-gray-600"
             style={{ backgroundColor: text.color }}
-            title="Escolher cor"
+            title="Choose color"
           />
           <input
             type="color"

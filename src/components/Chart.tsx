@@ -513,11 +513,11 @@ export const Chart = ({
   };
 
   const getModeText = () => {
-    if (isAddingPoints) return "Clique no gráfico para adicionar pontos";
+    if (isAddingPoints) return "Click on the chart to add points";
     if (isAddingCurves)
-      return "Clique em uma linha para adicionar ponto de controle (pode adicionar vários)";
-    if (isAddingText) return "Clique no gráfico para adicionar texto";
-    if (isDeletingLines) return "Clique em linhas ou pontos para deletar";
+      return "Click on a line to add control point (can add multiple)";
+    if (isAddingText) return "Click on the chart to add text";
+    if (isDeletingLines) return "Click on lines or points to delete";
     return "";
   };
 
@@ -636,7 +636,7 @@ export const Chart = ({
         whileTap={{ scale: 0.95 }}
         className="absolute cursor-pointer top-0 left-0 z-20 bg-gray-800 text-white p-2 rounded-tl-lg rounded-br-lg hover:bg-gray-700 transition-colors shadow-lg"
         onClick={onRestartAnimations}
-        title="Reiniciar Animações"
+        title="Restart Animations"
         style={{
           transform: "translateY(-1px)",
         }}
@@ -653,7 +653,7 @@ export const Chart = ({
             strokeLinecap="round"
             strokeLinejoin="round"
             role="img"
-            aria-label="Reiniciar animações"
+            aria-label="Restart animations"
           >
             <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
             <path d="M21 3v5h-5" />
@@ -1034,12 +1034,12 @@ export const Chart = ({
                   (() => {
                     const styleProps = getLineStyleProperties(line.style);
 
-                    // Usar função helper para garantir strokeDasharray correto
+                    // Use helper function to ensure correct strokeDasharray
                     const strokeDashArrayValue = getStrokeDasharrayForCurve(
                       line.style,
                     );
 
-                    // Criar path com propriedades específicas baseado no estilo
+                    // Create path with specific properties based on style
                     const pathProps = {
                       d: generateComplexCurvePath(line, controlPoints, padding),
                       fill: "none",
@@ -1055,7 +1055,7 @@ export const Chart = ({
 
                     const key = `curved-${line.id}-${controlPoints.length}-${line.style}`;
 
-                    // Aplicar strokeDasharray baseado no estilo
+                    // Apply strokeDasharray based on style
                     if (strokeDashArrayValue) {
                       return (
                         <motion.path
@@ -1068,7 +1068,7 @@ export const Chart = ({
                         />
                       );
                     } else {
-                      // Para linhas sólidas, usar pathLength para animação
+                      // For solid lines, use pathLength for animation
                       return (
                         <motion.path
                           key={key}
@@ -1298,7 +1298,7 @@ export const Chart = ({
               style={{ cursor: "pointer" }}
               role="button"
               tabIndex={0}
-              aria-label={`Editar texto: ${text.content}`}
+                                aria-label={`Edit text: ${text.content}`}
               onMouseUp={(e) => {
                 e.stopPropagation(); // Prevent event from bubbling to canvas
 

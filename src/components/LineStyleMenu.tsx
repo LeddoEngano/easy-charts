@@ -25,12 +25,12 @@ const styleOptions: Array<{
 }> = [
   {
     value: "solid",
-    label: "Sólida",
+    label: "Solid",
     preview: <div className="w-full h-1 bg-current rounded-full" />,
   },
   {
     value: "dashed",
-    label: "Tracejada",
+    label: "Dashed",
     preview: (
       <div
         className="w-full h-1 bg-current rounded-full"
@@ -43,7 +43,7 @@ const styleOptions: Array<{
   },
   {
     value: "dotted",
-    label: "Pontilhada",
+    label: "Dotted",
     preview: (
       <div
         className="w-full h-1 bg-current rounded-full"
@@ -56,7 +56,7 @@ const styleOptions: Array<{
   },
   {
     value: "dash-dot",
-    label: "Traço-Ponto",
+    label: "Dash-Dot",
     preview: (
       <div
         className="w-full h-1 bg-current rounded-full"
@@ -69,12 +69,12 @@ const styleOptions: Array<{
   },
   {
     value: "thick",
-    label: "Grossa",
+    label: "Thick",
     preview: <div className="w-full h-2 bg-current rounded-full" />,
   },
   {
     value: "thin",
-    label: "Fina",
+    label: "Thin",
     preview: <div className="w-full h-0.5 bg-current rounded-full" />,
   },
 ];
@@ -120,7 +120,7 @@ export const LineStyleMenu = ({
 
   return (
     <DraggableMenu
-      title="Configurações da Linha"
+      title="Line Settings"
       x={x + 10}
       y={y - 100}
       onClose={onClose}
@@ -132,7 +132,7 @@ export const LineStyleMenu = ({
             htmlFor="line-color-input"
             className="text-sm font-medium text-gray-300"
           >
-            Cor da Linha
+            Line Color
           </label>
 
           {/* Quick select colors */}
@@ -148,7 +148,7 @@ export const LineStyleMenu = ({
                   currentColor === color ? "border-white" : "border-gray-600"
                 }`}
                 style={{ backgroundColor: color }}
-                title={`Cor ${color}`}
+                title={`Color ${color}`}
               />
             ))}
           </div>
@@ -166,7 +166,7 @@ export const LineStyleMenu = ({
               }
               onMouseLeave={() => onPreviewColor(currentColor)}
               className="w-8 h-8 rounded border-2 border-gray-600 cursor-pointer bg-transparent"
-              title="Escolher cor"
+              title="Choose color"
             />
             <input
               id="line-color-input"
@@ -186,7 +186,7 @@ export const LineStyleMenu = ({
               className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="#000000"
               maxLength={7}
-              title="Digite o código hexadecimal"
+              title="Type the hexadecimal code"
             />
           </div>
         </div>
@@ -194,7 +194,7 @@ export const LineStyleMenu = ({
         {/* Style options section */}
         <div className="space-y-2">
           <div className="text-sm font-medium text-gray-300">
-            Estilo da Linha
+            Line Style
           </div>
           <div className="space-y-1">
             {styleOptions.map((option) => (
